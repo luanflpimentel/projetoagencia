@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  botconversa:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: botconversa-app
+    restart: unless-stopped
+    
+    # Variáveis de ambiente
+    environment:
+      # Next.js
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      
+      # Supabase
+      - NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      
+      # UAZAPI (WhatsApp)
+      - UAZAPI_BASE_URL=${UAZAPI_BASE_URL}
+      - UAZAPI_ADMIN_TOKEN=${UAZAPI_ADMIN_TOKEN}
+      
+      # Webhook
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+      
+      # App URL
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+      
+    # Portas (apenas necessário se não usar Traefik)
+    # ports:
+    #   - "3000:3000"
+    
+    # Healthcheck
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Labels para Traefik
+    labels:
+      # Habilitar Traefik
+      - "traefik.enable=true"
+      
+      # Nome do serviço
+      - "traefik.http.services.botconversa.loadbalancer.server.port=3000"
+      
+      # Roteamento HTTP
+      - "traefik.http.routers.botconversa.rule=Host(`zeyno.app.br`)"
+      - "traefik.http.routers.botconversa.entrypoints=web"
+      
+      # Redirect HTTP -> HTTPS
+      - "traefik.http.routers.botconversa.middlewares=redirect-to-https@file"
+      
+      # Roteamento HTTPS
+      - "traefik.http.routers.botconversa-secure.rule=Host(`zeyno.app.br`)"
+      - "traefik.http.routers.botconversa-secure.entrypoints=websecure"
+      - "traefik.http.routers.botconversa-secure.tls=true"
+      - "traefik.http.routers.botconversa-secure.tls.certresolver=letsencrypt"
+      
+      # Middlewares adicionais (opcional)
+      - "traefik.http.routers.botconversa-secure.middlewares=security-headers@file"
+    
+    # Rede do Traefik
+    networks:
+      - traefik_network
+
+# Usar a rede existente do Traefik
+networks:
+  traefik_network:
+    external: true
