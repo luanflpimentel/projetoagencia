@@ -2,11 +2,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { promptQueries, clientesQueries } from '@/lib/supabase-queries';
 
+// Verificar se estamos em build time (variáveis não disponíveis)
+const isBuildTime = !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
 // POST - Gerar prompt do cliente
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  // Durante o build, retornar uma resposta vazia para evitar erros
+  if (isBuildTime) {
+    return NextResponse.json(
+      { error: 'Endpoint não disponível durante o build' },
+      { status: 503 }
+    );
+  }
+
   try {
     const params = await context.params;
     const clienteId = params.id;
