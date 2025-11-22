@@ -1,8 +1,12 @@
 # 🐳 Dockerfile - BotConversa Next.js 16
 # Build otimizado para produção
 
+# Args de build para variáveis públicas do Next.js
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+
 # ============================================
-# STAGE 1: Dependencies (Produção)
+# STAGE 1: Dependências de Produção
 # ============================================
 FROM node:24-alpine AS deps-prod
 
@@ -32,18 +36,23 @@ RUN npm ci && \
     npm cache clean --force
 
 # ============================================
-# STAGE 3: Builder
+# STAGE 3: Builder - Build da Aplicação
 # ============================================
 FROM node:24-alpine AS builder
 
 WORKDIR /app
 
-# Copiar TODAS as dependências (incluindo dev)
+# Copiar node_modules
 COPY --from=deps-full /app/node_modules ./node_modules
+
+# Copiar código
 COPY . .
 
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_ENV=production
+# Passar ARGs como ENV para o build
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 # Build da aplicação
 RUN npm run build
