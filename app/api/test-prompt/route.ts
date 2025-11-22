@@ -2,10 +2,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Forçar rota dinâmica (não gerar no build)
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+// Helper para criar cliente Supabase (lazy loading)
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase não configurado');
+  }
+
+  return createClient(supabaseUrl, supabaseKey);
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,6 +29,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Criar cliente Supabase apenas quando necessário
+    const supabase = getSupabaseClient();
 
     // Buscar cliente no banco
     const { data: cliente, error } = await supabase
