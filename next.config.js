@@ -3,26 +3,21 @@ const nextConfig = {
   // ✅ Habilitar output standalone para Docker
   output: 'standalone',
   
-  // Desabilitar telemetria
-  telemetry: false,
-  
   // Otimizações
   poweredByHeader: false,
   compress: true,
   
-  // ESLint e TypeScript
-  eslint: {
-    ignoreDuringBuilds: true, // Ajuste conforme necessário
-  },
-  typescript: {
-    ignoreBuildErrors: false, // Mantenha false para produção
-  },
-  
-  // Configurações de imagem (se usar next/image)
+  // Configurações de imagem (atualizado para remotePatterns)
   images: {
-    domains: [
-      'supabase.co',
-      // Adicione outros domínios se necessário
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'supabase.co',
+      },
     ],
   },
   
