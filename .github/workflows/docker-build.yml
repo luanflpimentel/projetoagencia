@@ -4,6 +4,11 @@ on:
   push:
     branches: [ master, main ]
 
+# ✅ ADICIONAR ISTO:
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
