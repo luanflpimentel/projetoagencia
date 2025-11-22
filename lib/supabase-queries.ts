@@ -3,7 +3,7 @@
 // Queries prontas para usar no Next.js
 // ============================================
 
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-browser';
 import type {
   Cliente,
   Template,
@@ -18,22 +18,37 @@ import type {
   TemplateFormData,
 } from '@/lib/types';
 
+// Helper para obter cliente Supabase (lazy loading)
+const getSupabase = () => {
+  // Durante o build, retorna null
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    return null;
+  }
+  return createClient();
+};
+
 // ===== CLIENTES =====
 
 export const clientesQueries = {
   // Listar todos os clientes ativos
   listar: async () => {
-  const { data, error } = await supabase
-    .from('vw_clientes_lista')
-    .select('*')
-    .eq('ativo', true)
-    .order('nome_cliente', { ascending: true }); // ✅ usar nome_cliente
-  
-  return { data, error };
-},
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
+    const { data, error } = await supabase
+      .from('vw_clientes_lista')
+      .select('*')
+      .eq('ativo', true)
+      .order('nome_cliente', { ascending: true });
+    
+    return { data, error };
+  },
 
   // Buscar cliente por ID
   buscarPorId: async (id: string) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('clientes')
       .select('*')
@@ -45,6 +60,9 @@ export const clientesQueries = {
 
   // Buscar cliente por nome da instância (para N8N)
   buscarPorInstancia: async (nomeInstancia: string) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('clientes')
       .select('prompt_sistema')
@@ -57,6 +75,9 @@ export const clientesQueries = {
 
   // Buscar cliente com seus templates
   buscarComTemplates: async (id: string) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('vw_clientes_com_templates')
       .select('*')
@@ -68,6 +89,9 @@ export const clientesQueries = {
 
   // Criar novo cliente
   criar: async (dados: ClienteFormData) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     // 1. Criar cliente
     const { data: cliente, error: erroCliente } = await supabase
       .from('clientes')
@@ -115,6 +139,9 @@ export const clientesQueries = {
 
   // Atualizar cliente
   atualizar: async (id: string, dados: Partial<Cliente>) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('clientes')
       .update(dados)
@@ -127,6 +154,9 @@ export const clientesQueries = {
 
   // Atualizar prompt do cliente
   atualizarPrompt: async (id: string, prompt: string, editadoManualmente: boolean = false) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('clientes')
       .update({
@@ -146,6 +176,9 @@ export const clientesQueries = {
     id: string, 
     status: 'desconectado' | 'connecting' | 'conectado'
   ) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const updates: any = { status_conexao: status };
     
     if (status === 'conectado') {
@@ -175,6 +208,9 @@ export const clientesQueries = {
 
   // Soft delete (desativar)
   desativar: async (id: string) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('clientes')
       .update({ ativo: false })
@@ -187,6 +223,9 @@ export const clientesQueries = {
 
   // Buscar clientes conectados
   listarConectados: async () => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('clientes')
       .select('*')
@@ -203,6 +242,9 @@ export const clientesQueries = {
 export const templatesQueries = {
   // Listar todos os templates ativos
   listar: async () => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('vw_templates_com_uso')
       .select('*')
@@ -214,6 +256,9 @@ export const templatesQueries = {
 
   // Buscar template por ID
   buscarPorId: async (id: string) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('templates')
       .select('*')
@@ -225,6 +270,9 @@ export const templatesQueries = {
 
   // Criar novo template
   criar: async (dados: TemplateFormData) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('templates')
       .insert(dados)
@@ -236,6 +284,9 @@ export const templatesQueries = {
 
   // Atualizar template
   atualizar: async (id: string, dados: Partial<Template>) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('templates')
       .update(dados)
@@ -248,6 +299,9 @@ export const templatesQueries = {
 
   // Duplicar template
   duplicar: async (id: string) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     // Buscar template original
     const { data: original, error: erroOriginal } = await templatesQueries.buscarPorId(id);
     
@@ -276,6 +330,9 @@ export const templatesQueries = {
 
   // Soft delete (desativar)
   desativar: async (id: string) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('templates')
       .update({ ativo: false })
@@ -288,6 +345,9 @@ export const templatesQueries = {
 
   // Buscar templates de um cliente
   buscarPorCliente: async (clienteId: string) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('templates')
       .select('*, clientes_templates!inner(cliente_id)')
@@ -303,6 +363,9 @@ export const templatesQueries = {
 export const clientesTemplatesQueries = {
   // Adicionar template ao cliente
   adicionar: async (clienteId: string, templateId: string) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('clientes_templates')
       .insert({ cliente_id: clienteId, template_id: templateId })
@@ -314,6 +377,9 @@ export const clientesTemplatesQueries = {
 
   // Remover template do cliente
   remover: async (clienteId: string, templateId: string) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('clientes_templates')
       .delete()
@@ -325,6 +391,9 @@ export const clientesTemplatesQueries = {
 
   // Atualizar templates do cliente (remove todos e adiciona novos)
   atualizar: async (clienteId: string, templateIds: string[]) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     // 1. Remover todos os existentes
     await supabase
       .from('clientes_templates')
@@ -355,6 +424,9 @@ export const clientesTemplatesQueries = {
 export const atendimentosQueries = {
   // Listar atendimentos
   listar: async (filtros?: { clienteId?: string; status?: string; limit?: number }) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     let query = supabase
       .from('vw_atendimentos_recentes')
       .select('*');
@@ -377,6 +449,9 @@ export const atendimentosQueries = {
 
   // Buscar por ID
   buscarPorId: async (id: string) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('atendimentos')
       .select('*')
@@ -388,6 +463,9 @@ export const atendimentosQueries = {
 
   // Criar atendimento
   criar: async (dados: Partial<Atendimento>) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('atendimentos')
       .insert(dados)
@@ -408,6 +486,9 @@ export const atendimentosQueries = {
 
   // Atualizar atendimento
   atualizar: async (id: string, dados: Partial<Atendimento>) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('atendimentos')
       .update(dados)
@@ -420,6 +501,9 @@ export const atendimentosQueries = {
 
   // Finalizar atendimento
   finalizar: async (id: string, status: 'qualificado' | 'desqualificado' | 'encerrado') => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('atendimentos')
       .update({
@@ -444,6 +528,9 @@ export const atendimentosQueries = {
 
   // Contar atendimentos hoje
   contarHoje: async () => {
+    const supabase = getSupabase();
+    if (!supabase) return { count: 0, error: new Error('Supabase not configured') };
+    
     const hoje = new Date().toISOString().split('T')[0];
     
     const { count, error } = await supabase
@@ -461,6 +548,9 @@ export const atendimentosQueries = {
 export const logsQueries = {
   // Listar logs
   listar: async (filtros?: { clienteId?: string; tipoEvento?: string; limit?: number }) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     let query = supabase
       .from('logs_sistema')
       .select('*')
@@ -484,6 +574,9 @@ export const logsQueries = {
 
   // Criar log
   criar: async (dados: Omit<LogSistema, 'id' | 'criado_em'>) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('logs_sistema')
       .insert(dados)
@@ -495,6 +588,9 @@ export const logsQueries = {
 
   // Últimas atividades (para dashboard)
   ultimasAtividades: async (limit: number = 5) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('logs_sistema')
       .select('*')
@@ -510,6 +606,9 @@ export const logsQueries = {
 export const dashboardQueries = {
   // Buscar estatísticas gerais
   stats: async () => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('vw_dashboard_stats')
       .select('*')
@@ -520,6 +619,9 @@ export const dashboardQueries = {
 
   // Top templates mais usados
   topTemplates: async (limit: number = 5) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .from('vw_templates_com_uso')
       .select('*')
@@ -536,6 +638,9 @@ export const dashboardQueries = {
 export const promptQueries = {
   // Gerar prompt compilado usando a function do banco
   gerar: async (clienteId: string, nomeEscritorio: string, nomeAgente: string) => {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: new Error('Supabase not configured') };
+    
     const { data, error } = await supabase
       .rpc('gerar_prompt_cliente', {
         p_cliente_id: clienteId,
