@@ -2,9 +2,8 @@ version: '3.8'
 
 services:
   botconversa:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # Usar imagem do GitHub Container Registry (buildada pelo GitHub Actions)
+    image: ghcr.io/luanflpimentel/projetoagencia:latest
     container_name: botconversa-app
     restart: unless-stopped
     
@@ -30,10 +29,6 @@ services:
       
       # App URL
       - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
-      
-    # Portas (apenas necessário se não usar Traefik)
-    # ports:
-    #   - "3000:3000"
     
     # Healthcheck
     healthcheck:
