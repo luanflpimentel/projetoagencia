@@ -1,4 +1,4 @@
-// app/dashboard/logs/page.tsx - VERSÃO CORRIGIDA
+// app/dashboard/logs/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -13,7 +13,7 @@ interface Log {
   criado_em: string;
   clientes: {
     nome_cliente: string;
-  } | null;
+  }[] | null;  // ← CORRIGIDO: array
 }
 
 type FilterType = 'todos' | 'conexao' | 'desconexao' | 'prompt_atualizado' | 'cliente_criado' | 'cliente_editado' | 'erro';
@@ -35,7 +35,6 @@ export default function LogsPage() {
     try {
       setLoading(true);
 
-      // Query base
       let query = supabase
         .from('logs_sistema')
         .select(`
@@ -48,12 +47,10 @@ export default function LogsPage() {
         `, { count: 'exact' })
         .order('criado_em', { ascending: false });
 
-      // Aplicar filtro de tipo
       if (filter !== 'todos') {
         query = query.eq('tipo_evento', filter);
       }
 
-      // Aplicar paginação
       const from = (currentPage - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
       query = query.range(from, to);
@@ -71,11 +68,10 @@ export default function LogsPage() {
     }
   }
 
-  // Filtrar por busca (client-side)
   const filteredLogs = logs.filter(log => {
     if (!searchTerm) return true;
     const searchLower = searchTerm.toLowerCase();
-    const clienteNome = log.clientes?.nome_cliente || '';
+    const clienteNome = log.clientes?.[0]?.nome_cliente || '';  // ← CORRIGIDO: [0]
     return (
       log.descricao?.toLowerCase().includes(searchLower) ||
       clienteNome.toLowerCase().includes(searchLower) ||
@@ -85,7 +81,6 @@ export default function LogsPage() {
 
   async function exportToCSV() {
     try {
-      // Buscar TODOS os logs (sem paginação)
       const { data, error } = await supabase
         .from('logs_sistema')
         .select(`
@@ -98,12 +93,11 @@ export default function LogsPage() {
 
       if (error) throw error;
 
-      // Criar CSV
       const headers = ['Data/Hora', 'Tipo', 'Cliente', 'Descrição'];
       const rows = (data as Log[] || []).map(log => [
         new Date(log.criado_em).toLocaleString('pt-BR'),
         log.tipo_evento,
-        log.clientes?.nome_cliente || 'Sistema',
+        log.clientes?.[0]?.nome_cliente || 'Sistema',  // ← CORRIGIDO: [0]
         log.descricao || '',
       ]);
 
@@ -112,7 +106,6 @@ export default function LogsPage() {
         ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
       ].join('\n');
 
-      // Download
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
@@ -143,7 +136,6 @@ export default function LogsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Logs do Sistema</h1>
@@ -160,10 +152,8 @@ export default function LogsPage() {
         </button>
       </div>
 
-      {/* Filtros */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Busca */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Buscar
@@ -177,7 +167,6 @@ export default function LogsPage() {
             />
           </div>
 
-          {/* Filtro de Tipo */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Filtrar por tipo
@@ -202,7 +191,6 @@ export default function LogsPage() {
         </div>
       </div>
 
-      {/* Lista de Logs */}
       {loading ? (
         <div className="bg-white rounded-lg shadow p-12 flex justify-center">
           <Spinner size="lg" />
@@ -261,7 +249,7 @@ export default function LogsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {log.clientes?.nome_cliente || 'Sistema'}
+                        {log.clientes?.[0]?.nome_cliente || 'Sistema'}  {/* ← CORRIGIDO: [0] */}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {log.descricao}
@@ -273,7 +261,6 @@ export default function LogsPage() {
             </table>
           </div>
 
-          {/* Paginação */}
           {totalPages > 1 && (
             <div className="bg-gray-50 px-6 py-4 flex items-center justify-between border-t border-gray-200">
               <div className="text-sm text-gray-700">
