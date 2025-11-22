@@ -68,7 +68,11 @@ export async function POST(request: NextRequest) {
       console.error('Erro ao criar cliente:', error);
       
       // Verificar se é erro de duplicação
-      if (error.message?.includes('duplicate key') || error.code === '23505') {
+      const isDuplicateError = 
+        error.message?.includes('duplicate key') || 
+        ('code' in error && error.code === '23505');
+
+      if (isDuplicateError) {
         return NextResponse.json(
           { error: 'Já existe um cliente com este nome de instância' },
           { status: 409 }
