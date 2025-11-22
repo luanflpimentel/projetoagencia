@@ -23,7 +23,7 @@ export function useAuthWithPermissions() {
     // Listener para mudança de auth (apenas login/logout, sem auto-refresh)
     const supabase = createClient();
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: any, session: any) => {
         console.log('🔐 [AUTH HOOK] Auth state changed:', event);
         
         if (event === 'SIGNED_IN' && session) {
@@ -140,7 +140,7 @@ export function useAuthWithPermissions() {
           atualizado_por: authUser.id 
         })
         .eq('id', authUser.id)
-        .then(({ error }) => {
+        .then(({ error }: { error: any }) => {
           if (error) {
             console.warn('⚠️ [AUTH HOOK] Erro ao atualizar último login:', error);
           }
