@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       success: true,
       instanceName: nomeInstancia,
       token: instanceToken,
-      status: instanceData.status || instanceData.instance?.status,
+      status: 'status' in instanceData ? instanceData.status : instanceData.instance?.status || 'unknown',
     });
   } catch (error: any) {
     console.error('❌ Erro ao criar instância:', error);
