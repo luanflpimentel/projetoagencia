@@ -51,10 +51,10 @@ export default function ConfiguracoesPage() {
       ]) || [];
 
       downloadCSV(headers, rows, 'clientes');
-      toast.success('Clientes exportados!', 'Arquivo baixado com sucesso');
+      toast.success('Clientes exportados! Arquivo baixado com sucesso');
     } catch (error: any) {
       console.error('Erro ao exportar clientes:', error);
-      toast.error('Erro ao exportar', error.message);
+      toast.error(`Erro ao exportar: ${error.message}`);
     } finally {
       setExporting(false);
     }
@@ -99,10 +99,10 @@ export default function ConfiguracoesPage() {
       ]) || [];
 
       downloadCSV(headers, rows, 'templates');
-      toast.success('Templates exportados!', 'Arquivo baixado com sucesso');
+      toast.success('Templates exportados! Arquivo baixado com sucesso');
     } catch (error: any) {
       console.error('Erro ao exportar templates:', error);
-      toast.error('Erro ao exportar', error.message);
+      toast.error(`Erro ao exportar: ${error.message}`);
     } finally {
       setExporting(false);
     }
@@ -135,10 +135,10 @@ export default function ConfiguracoesPage() {
       ]) || [];
 
       downloadCSV(headers, rows, 'logs');
-      toast.success('Logs exportados!', 'Últimos 1000 logs baixados');
+      toast.success('Logs exportados! Últimos 1000 logs baixados');
     } catch (error: any) {
       console.error('Erro ao exportar logs:', error);
-      toast.error('Erro ao exportar', error.message);
+      toast.error(`Erro ao exportar: ${error.message}`);
     } finally {
       setExporting(false);
     }
@@ -173,10 +173,10 @@ export default function ConfiguracoesPage() {
       link.download = `backup-completo-${new Date().toISOString().split('T')[0]}.json`;
       link.click();
 
-      toast.success('Backup completo criado!', 'Arquivo JSON baixado com sucesso');
+      toast.success('Backup completo criado! Arquivo JSON baixado com sucesso');
     } catch (error: any) {
       console.error('Erro ao criar backup:', error);
-      toast.error('Erro ao criar backup', error.message);
+      toast.error(`Erro ao criar backup: ${error.message}`);
     } finally {
       setExporting(false);
     }
