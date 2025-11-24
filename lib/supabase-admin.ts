@@ -7,23 +7,37 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-  throw new Error('Missing Supabase Admin credentials');
+// Durante build time, as variáveis podem não estar disponíveis
+// Apenas em runtime (quando realmente usar) vamos validar
+if (!supabaseUrl && typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
+  console.warn('⚠️ NEXT_PUBLIC_SUPABASE_URL não está definida (pode ser normal durante build)');
 }
 
+if (!supabaseServiceRoleKey && typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
+  console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY não está definida (pode ser normal durante build)');
+}
+
+// Criar cliente apenas se temos as credenciais
+// Se não tiver, vai falhar apenas quando tentar usar (runtime)
 // ⚠️ Cliente ADMIN - BYPASSA RLS!
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
+export const supabaseAdmin = supabaseUrl && supabaseServiceRoleKey 
+  ? createClient(supabaseUrl, supabaseServiceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+  : null as any; // Durante build pode ser null, mas em runtime sempre existirá
 
 /**
  * Verifica se um usuário tem role 'agencia'
  * Use esta função ANTES de usar supabaseAdmin
  */
 export async function verificarPermissaoAgencia(userId: string): Promise<boolean> {
+  if (!supabaseAdmin) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY não está configurada no ambiente');
+  }
+  
   try {
     const { data, error } = await supabaseAdmin
       .from('usuarios')
