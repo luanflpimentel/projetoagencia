@@ -23,14 +23,30 @@ const navItems: NavItem[] = [
 
 interface DashboardNavProps {
   userEmail?: string;
+  userRole?: 'agencia' | 'cliente';
 }
 
-export default function DashboardNav({ userEmail }: DashboardNavProps) {
+export default function DashboardNav({ userEmail, userRole }: DashboardNavProps) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Filtrar itens do menu baseado no role
+  const getVisibleNavItems = () => {
+    if (userRole === 'cliente') {
+      // Cliente vê apenas "Meu Negócio" (página de clientes)
+      return [
+        { href: '/dashboard/clientes', label: 'Meu Negócio', icon: '⚙️' }
+      ];
+    }
+    
+    // Agência vê tudo
+    return navItems;
+  };
+
+  const visibleNavItems = getVisibleNavItems();
 
   async function handleLogout() {
     try {
@@ -59,7 +75,7 @@ export default function DashboardNav({ userEmail }: DashboardNavProps) {
 
           {/* Navigation Items - Desktop */}
           <div className="hidden md:flex items-center space-x-1">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const isActive = pathname === item.href || 
                              (item.href !== '/dashboard' && pathname?.startsWith(item.href));
               
@@ -142,7 +158,7 @@ export default function DashboardNav({ userEmail }: DashboardNavProps) {
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <div className="md:hidden pb-3 space-y-1">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const isActive = pathname === item.href || 
                              (item.href !== '/dashboard' && pathname?.startsWith(item.href));
               

@@ -246,7 +246,7 @@ export const templatesQueries = {
     if (!supabase) return { data: null, error: new Error('Supabase not configured') };
     
     const { data, error } = await supabase
-      .from('vw_templates_com_uso')
+      .from('templates')
       .select('*')
       .eq('ativo', true)
       .order('nome_template');
@@ -623,10 +623,10 @@ export const dashboardQueries = {
     if (!supabase) return { data: null, error: new Error('Supabase not configured') };
     
     const { data, error } = await supabase
-      .from('vw_templates_com_uso')
+      .from('templates')
       .select('*')
       .eq('ativo', true)
-      .order('total_clientes_usando', { ascending: false })
+      .order('nome_template')
       .limit(limit);
     
     return { data, error };

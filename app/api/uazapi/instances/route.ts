@@ -1,7 +1,7 @@
 // app/api/uazapi/instances/route.ts - VERSÃO FINAL COM instance_token
 import { NextRequest, NextResponse } from 'next/server';
 import { uazapiService } from '@/lib/services/uazapi.service';
-import { getSupabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-server';
 import { logsQueries } from '@/lib/supabase-queries';
 
 // POST - Criar instância
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = getSupabase();
+    const supabase = await createClient();
 
     // Verificar se instância já existe no banco
     const { data: clienteExistente } = await supabase

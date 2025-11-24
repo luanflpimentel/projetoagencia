@@ -2,6 +2,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase-server'
+import { verificarPermissaoAgencia, supabaseAdmin } from '@/lib/supabase-admin'
 import { revalidatePath } from 'next/cache'
 
 export async function toggleUsuarioAtivo(
@@ -26,57 +27,21 @@ export async function toggleUsuarioAtivo(
       };
     }
     
-    // 2. Buscar dados do usuário logado (SEM acionar recursão)
-    const { data: usuarioLogado, error: usuarioLogadoError } = await supabase
-      .from('usuarios')
-      .select('id, role, cliente_id')
-      .eq('id', user.id)
-      .single();
+    // 2. Verificar se é agência (apenas agência pode modificar usuários)
+    const isAgencia = await verificarPermissaoAgencia(user.id);
     
-    if (usuarioLogadoError || !usuarioLogado) {
-      console.error('[SERVER] Erro ao buscar usuário logado:', usuarioLogadoError);
+    if (!isAgencia) {
+      console.error('[SERVER] Sem permissão para modificar usuários');
       return {
         success: false,
-        error: 'Usuário não encontrado'
+        error: 'Você não tem permissão para modificar usuários'
       };
     }
     
-    console.log('[SERVER] Usuário logado:', usuarioLogado.role);
+    console.log('[SERVER] Usuário é agência, prosseguindo...');
     
-    // 3. Buscar dados do usuário a ser modificado
-    const { data: usuarioAlvo, error: usuarioAlvoError } = await supabase
-      .from('usuarios')
-      .select('id, role, cliente_id')
-      .eq('id', usuarioId)
-      .single();
-    
-    if (usuarioAlvoError || !usuarioAlvo) {
-      console.error('[SERVER] Erro ao buscar usuário alvo:', usuarioAlvoError);
-      return {
-        success: false,
-        error: 'Usuário alvo não encontrado'
-      };
-    }
-    
-    // 4. Validar permissões
-    const isSuperAdmin = usuarioLogado.role === 'super_admin';
-    const isAdminCliente = usuarioLogado.role === 'admin_cliente';
-    const mesmoCliente = usuarioLogado.cliente_id === usuarioAlvo.cliente_id;
-    
-    // Super admin pode tudo
-    if (!isSuperAdmin) {
-      // Admin cliente só pode modificar usuários do mesmo cliente
-      if (!isAdminCliente || !mesmoCliente) {
-        console.error('[SERVER] Sem permissão. Role:', usuarioLogado.role, 'Cliente:', mesmoCliente);
-        return {
-          success: false,
-          error: 'Você não tem permissão para modificar este usuário'
-        };
-      }
-    }
-    
-    // 5. Fazer update
-    const { data, error } = await supabase
+    // 3. Fazer update usando supabaseAdmin (bypassa RLS)
+    const { data, error } = await supabaseAdmin
       .from('usuarios')
       .update({
         ativo: novoStatus,

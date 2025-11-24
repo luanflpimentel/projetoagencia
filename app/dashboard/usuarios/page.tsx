@@ -62,25 +62,15 @@ export default function UsuariosPage() {
         setUsuarioLogado(usuarioLogadoData as Usuario);
       }
 
-      const { data, error: queryError } = await supabase
-        .from('usuarios')
-        .select(`
-          id,
-          email,
-          nome_completo,
-          role,
-          cliente_id,
-          ativo,
-          email_verificado,
-          primeiro_acesso,
-          ultimo_login,
-          criado_em,
-          atualizado_em
-        `)
-        .order('criado_em', { ascending: false });
+      // Chamar API que verifica permissões e retorna usuários apropriados
+      const response = await fetch('/api/usuarios/listar');
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao buscar usuários');
+      }
 
-      if (queryError) throw queryError;
-
+      const data = await response.json();
       const usuariosData = (data || []).map((u: any) => ({
         ...u,
         avatar_url: undefined,
@@ -263,7 +253,7 @@ export default function UsuariosPage() {
           </div>
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-3xl font-bold text-purple-600">
-              {usuarios.filter(u => u.role === 'super_admin').length}
+              {usuarios.filter(u => u.role === 'agencia').length}
             </div>
             <div className="text-sm text-gray-600">Super Admins</div>
           </div>

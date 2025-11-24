@@ -157,30 +157,28 @@ export function useAuthWithPermissions() {
   }
 
   function calcularPermissoes(user: Usuario): PermissoesUsuario {
-    const isSuperAdmin = user.role === 'super_admin';
-    const isAdminCliente = user.role === 'admin_cliente';
-    const isUsuarioComum = user.role === 'usuario_cliente';
+    const isAgencia = user.role === 'agencia';
+    const isCliente = user.role === 'cliente';
 
     return {
       // Usuários
-      pode_ver_usuarios: isSuperAdmin || isAdminCliente,
-      pode_criar_usuarios: isSuperAdmin || isAdminCliente,
-      pode_editar_usuarios: isSuperAdmin || isAdminCliente,
-      pode_deletar_usuarios: isSuperAdmin,
+      pode_ver_usuarios: isAgencia,
+      pode_criar_usuarios: isAgencia,
+      pode_editar_usuarios: isAgencia,
+      pode_deletar_usuarios: isAgencia,
       
       // Clientes
-      pode_ver_todos_clientes: isSuperAdmin,
-      pode_criar_clientes: isSuperAdmin,
-      pode_editar_clientes: isSuperAdmin || isAdminCliente,
-      pode_deletar_clientes: isSuperAdmin,
+      pode_ver_todos_clientes: isAgencia,
+      pode_criar_clientes: isAgencia,
+      pode_editar_clientes: isAgencia,
+      pode_deletar_clientes: isAgencia,
       
       // Logs
-      pode_ver_todos_logs: isSuperAdmin,
+      pode_ver_todos_logs: isAgencia,
       
       // Roles
-      is_super_admin: isSuperAdmin,
-      is_admin_cliente: isAdminCliente,
-      is_usuario_comum: isUsuarioComum,
+      is_agencia: isAgencia,
+      is_cliente: isCliente,
     };
   }
 
@@ -191,7 +189,7 @@ export function useAuthWithPermissions() {
 
   function podeAcessarCliente(clienteId: string): boolean {
     if (!usuario) return false;
-    if (usuario.role === 'super_admin') return true;
+    if (usuario.role === 'agencia') return true;
     return usuario.cliente_id === clienteId;
   }
 

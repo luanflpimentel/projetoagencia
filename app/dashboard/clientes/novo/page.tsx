@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-browser'; // ✨ MUDANÇA: usar supabase-browser
 import { logsQueries } from '@/lib/supabase-queries';
 
 export default function NovoClientePage() {
@@ -51,6 +51,21 @@ export default function NovoClientePage() {
     setLoading(true);
 
     try {
+      // 0. ✨ CRIAR CLIENTE SUPABASE E OBTER USUÁRIO AUTENTICADO
+      const supabase = createClient(); // ✨ Criar instância aqui
+      
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        console.error('Erro de autenticação:', authError);
+        alert('Você precisa estar autenticado para criar um cliente');
+        setLoading(false);
+        router.push('/login');
+        return;
+      }
+
+      console.log('✅ Usuário autenticado:', user.id, user.email);
+
       // 1. VALIDAÇÕES
       if (!formData.nome_cliente || !formData.nome_instancia || !formData.nome_escritorio || !formData.nome_agente) {
         alert('Preencha todos os campos obrigatórios');
@@ -98,6 +113,9 @@ IMPORTANTE:
 - Foque em entender e qualificar o caso
 - Mantenha o tom acolhedor do ${formData.nome_escritorio}`;
 
+      console.log('📝 Preparando para criar cliente...');
+      console.log('Usuario ID:', user.id);
+
       // 4. CRIAR CLIENTE NO BANCO
       const { data: novoCliente, error: erroCliente } = await supabase
         .from('clientes')
@@ -108,22 +126,23 @@ IMPORTANTE:
           nome_instancia: formData.nome_instancia,
           numero_whatsapp: formData.numero_whatsapp || null,
           email: formData.email || null,
-          prompt_sistema: promptSistema, // ← ADICIONADO!
+          prompt_sistema: promptSistema,
           prompt_editado_manualmente: false,
           status_conexao: 'desconectado',
           ativo: true,
+          usuario_id: user.id, // ✨ ESSENCIAL PARA RLS!
         }])
         .select()
         .single();
 
       if (erroCliente) {
-        console.error('Erro ao criar cliente:', erroCliente);
-        throw new Error('Erro ao criar cliente no banco de dados');
+        console.error('❌ Erro ao criar cliente:', erroCliente);
+        throw new Error(`Erro ao criar cliente: ${erroCliente.message}`);
       }
 
       console.log('✅ Cliente criado:', novoCliente);
 
-      // 4. CRIAR INSTÂNCIA NA UAZAPI
+      // 5. CRIAR INSTÂNCIA NA UAZAPI
       console.log('🔄 Criando instância na UAZAPI...');
       
       const responseUazapi = await fetch('/api/uazapi/instances', {
@@ -141,10 +160,6 @@ IMPORTANTE:
         console.error('❌ Erro na UAZAPI:', dataUazapi);
         
         // Cliente foi criado no banco, mas instância falhou
-        // Você pode decidir:
-        // Opção A: Reverter (deletar cliente)
-        // Opção B: Avisar usuário e deixar ele criar depois
-        
         alert(`Cliente criado, mas erro ao criar instância na UAZAPI: ${dataUazapi.error}\n\nVocê pode tentar conectar manualmente depois.`);
         
         // Log do erro
@@ -161,7 +176,7 @@ IMPORTANTE:
 
       console.log('✅ Instância criada na UAZAPI:', dataUazapi);
 
-      // 5. SUCESSO!
+      // 6. SUCESSO!
       alert('Cliente e instância WhatsApp criados com sucesso!');
       
       // Log de sucesso
@@ -171,11 +186,11 @@ IMPORTANTE:
         descricao: `Cliente ${novoCliente.nome_cliente} criado com instância ${novoCliente.nome_instancia}`,
       });
 
-      // 6. REDIRECIONAR
+      // 7. REDIRECIONAR
       router.push('/dashboard/clientes');
 
     } catch (error: any) {
-      console.error('Erro geral:', error);
+      console.error('❌ Erro geral:', error);
       alert(`Erro: ${error.message}`);
     } finally {
       setLoading(false);

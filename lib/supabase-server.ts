@@ -1,9 +1,10 @@
-// lib/supabase-server.ts - CLIENTE PARA SERVER ACTIONS
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
+// lib/supabase-server.ts - NEXT.JS 15+
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
+// ✅ ASYNC porque cookies() agora é async no Next.js 15
 export async function createClient() {
-  const cookieStore = await cookies()
+  const cookieStore = await cookies(); // ← AWAIT aqui!
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,18 +12,18 @@ export async function createClient() {
     {
       cookies: {
         getAll() {
-          return cookieStore.getAll()
+          return cookieStore.getAll();
         },
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
-            )
+            );
           } catch {
-            // Ignora erros em Server Components/Actions
+            // Server Component - can't set cookies
           }
         },
       },
     }
-  )
+  );
 }

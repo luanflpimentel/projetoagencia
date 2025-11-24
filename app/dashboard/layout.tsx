@@ -17,10 +17,19 @@ export default async function DashboardLayout({
     redirect('/login');
   }
 
+  // Buscar role do usuário
+  const { data: usuarioData } = await supabase
+    .from('usuarios')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  const userRole = usuarioData?.role as 'agencia' | 'cliente' | undefined;
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
-      <DashboardNav userEmail={user.email} />
+      <DashboardNav userEmail={user.email} userRole={userRole} />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">

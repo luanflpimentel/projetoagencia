@@ -1,7 +1,7 @@
 // app/api/uazapi/instances/[name]/qrcode/route.ts - VERSÃO FINAL COMPLETA
 import { NextRequest, NextResponse } from 'next/server';
 import { uazapiService } from '@/lib/services/uazapi.service';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-server';
 import { logsQueries } from '@/lib/supabase-queries';
 
 export async function GET(
@@ -18,6 +18,9 @@ export async function GET(
         { status: 400 }
       );
     }
+
+    // Criar cliente autenticado
+    const supabase = await createClient();
 
     // Buscar cliente e token
     const { data: cliente, error: clienteError } = await supabase

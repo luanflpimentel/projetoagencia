@@ -16,22 +16,20 @@ interface Cliente {
 }
 
 const ROLE_LABELS = {
-  super_admin: '👑 Super Admin',
-  admin_cliente: '🔑 Admin Cliente',
-  usuario_cliente: '👤 Usuário Cliente',
+  agencia: '🏢 Agência',
+  cliente: '👤 Cliente',
 };
 
 const ROLE_DESCRIPTIONS = {
-  super_admin: 'Acesso total ao sistema (Agência)',
-  admin_cliente: 'Administrador do cliente (gerencia usuários)',
-  usuario_cliente: 'Usuário comum (acesso limitado)',
+  agencia: 'Acesso completo ao sistema (vê e gerencia tudo)',
+  cliente: 'Acesso limitado (vê apenas seu WhatsApp)',
 };
 
 export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioProps) {
   const [formData, setFormData] = useState({
     email: '',
     nome_completo: '',
-    role: 'usuario_cliente' as UserRole,
+    role: 'cliente' as UserRole,
     cliente_id: '',
     telefone: '',
     senha: gerarSenha(),
@@ -86,14 +84,13 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
       return 'Nome deve ter pelo menos 3 caracteres';
     }
 
-    // Validar cliente para roles que não são super_admin
-    if (formData.role !== 'super_admin' && !formData.cliente_id) {
-      return 'Selecione um cliente para este usuário';
+    // Validar cliente_id (obrigatório para cliente, proibido para agencia)
+    if (formData.role === 'cliente' && !formData.cliente_id) {
+      return 'Cliente deve estar associado a um cliente WhatsApp';
     }
 
-    // Super admin não pode ter cliente
-    if (formData.role === 'super_admin' && formData.cliente_id) {
-      return 'Super Admin não pode ter cliente associado';
+    if (formData.role === 'agencia' && formData.cliente_id) {
+      return 'Agência não pode ter cliente associado';
     }
 
     // Validar senha
@@ -117,56 +114,30 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
     setError('');
 
     try {
-      // 1. Criar usuário no Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.senha,
-        options: {
-          emailRedirectTo: `${window.location.origin}/login`,
-        }
-      });
-
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('Usuário não criado no Auth');
-
-      // 2. Criar registro na tabela usuarios
-      const { error: dbError } = await supabase
-        .from('usuarios')
-        .insert({
-          id: authData.user.id,
+      // Chamar API backend para criar usuário (NÃO faz login automático)
+      const response = await fetch('/api/usuarios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           email: formData.email,
           nome_completo: formData.nome_completo,
           role: formData.role,
-          cliente_id: formData.role === 'super_admin' ? null : formData.cliente_id,
+          cliente_id: formData.cliente_id || null,
           telefone: formData.telefone || null,
-          ativo: true,
-          email_verificado: false,
-          primeiro_acesso: true,
-          criado_em: new Date().toISOString(),
-          atualizado_em: new Date().toISOString(),
-        });
+          senha: formData.senha
+        })
+      });
 
-      if (dbError) {
-        // Se falhar ao criar na tabela, tentar deletar do Auth
-        console.error('Erro ao criar usuário na tabela:', dbError);
-        await supabase.auth.admin.deleteUser(authData.user.id);
-        throw dbError;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao criar usuário');
       }
 
-      // 3. Registrar log
-      await supabase
-        .from('logs_sistema')
-        .insert({
-          tipo_evento: 'cliente_criado',
-          descricao: `Usuário ${formData.nome_completo} (${formData.email}) criado com role ${formData.role}`,
-          metadata: {
-            usuario_id: authData.user.id,
-            role: formData.role,
-            cliente_id: formData.cliente_id || null,
-          },
-        });
+      const { data } = await response.json();
 
-      // Sucesso!
+      console.log('✅ Usuário criado com sucesso:', data);
+
+      // Sucesso! Mostrar senha gerada
       alert(
         `✅ Usuário criado com sucesso!\n\n` +
         `📧 Email: ${formData.email}\n` +
@@ -273,17 +244,16 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               disabled={loading}
             >
-              <option value="usuario_cliente">{ROLE_LABELS.usuario_cliente}</option>
-              <option value="admin_cliente">{ROLE_LABELS.admin_cliente}</option>
-              <option value="super_admin">{ROLE_LABELS.super_admin}</option>
+              <option value="cliente">{ROLE_LABELS.cliente}</option>
+              <option value="agencia">{ROLE_LABELS.agencia}</option>
             </select>
             <p className="text-xs text-gray-500 mt-1">
               {ROLE_DESCRIPTIONS[formData.role]}
             </p>
           </div>
 
-          {/* Cliente (apenas se não for super_admin) */}
-          {formData.role !== 'super_admin' && (
+          {/* Cliente (apenas se role for cliente) */}
+          {formData.role === 'cliente' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Cliente <span className="text-red-500">*</span>
@@ -368,10 +338,10 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
             </button>
             <button
               type="submit"
-              disabled={loading || (formData.role !== 'super_admin' && clientes.length === 0)}
+              disabled={loading || (formData.role === 'cliente' && clientes.length === 0)}
               className={`
                 px-6 py-2 bg-blue-600 text-white rounded-lg transition-colors
-                ${loading || (formData.role !== 'super_admin' && clientes.length === 0)
+                ${loading || (formData.role === 'cliente' && clientes.length === 0)
                   ? 'opacity-50 cursor-not-allowed' 
                   : 'hover:bg-blue-700'}
               `}

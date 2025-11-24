@@ -1,6 +1,7 @@
-// app/api/clientes/[id]/route.ts
+// app/api/clientes/[id]/route.ts - NEXT.JS 15+
 import { NextRequest, NextResponse } from 'next/server';
-import { clientesQueries } from '@/lib/supabase-queries';
+import { createClient } from '@/lib/supabase-server';
+import { verificarPermissaoAgencia, supabaseAdmin } from '@/lib/supabase-admin';
 
 // GET - Buscar cliente por ID
 export async function GET(
@@ -8,17 +9,36 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createClient(); // ← AWAIT aqui!
+    
     // CRÍTICO: await params no Next.js 15+
     const params = await context.params;
     const id = params.id;
 
-    const { data, error } = await clientesQueries.buscarPorId(id);
+    // 🔐 Autenticar usuário
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Não autenticado' },
+        { status: 401 }
+      );
+    }
+
+    // Buscar cliente (RLS já filtra automaticamente)
+    const { data, error } = await supabase
+      .from('clientes')
+      .select('*')
+      .eq('id', id)
+      .single();
 
     if (error) {
       console.error('Erro ao buscar cliente:', error);
+      
+      // Se não encontrou, pode ser por não ter permissão ou não existir
       return NextResponse.json(
-        { error: 'Erro ao buscar cliente' },
-        { status: 500 }
+        { error: 'Cliente não encontrado ou sem permissão' },
+        { status: 404 }
       );
     }
 
@@ -30,6 +50,7 @@ export async function GET(
     }
 
     return NextResponse.json(data);
+    
   } catch (error) {
     console.error('Erro no servidor:', error);
     return NextResponse.json(
@@ -45,11 +66,68 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createClient(); // ← AWAIT aqui!
+    
     // CRÍTICO: await params no Next.js 15+
     const params = await context.params;
     const id = params.id;
 
+    // 🔐 Autenticar usuário
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Não autenticado' },
+        { status: 401 }
+      );
+    }
+
+    // Verificar role do usuário
+    const isAgencia = await verificarPermissaoAgencia(user.id);
+
+    // Buscar cliente (usando admin se for agência, normal se for cliente)
+    let clienteExistente, checkError;
+    
+    if (isAgencia) {
+      const result = await supabaseAdmin
+        .from('clientes')
+        .select('id, usuario_id, nome_cliente')
+        .eq('id', id)
+        .single();
+      clienteExistente = result.data;
+      checkError = result.error;
+    } else {
+      const result = await supabase
+        .from('clientes')
+        .select('id, usuario_id, nome_cliente')
+        .eq('id', id)
+        .eq('usuario_id', user.id)
+        .single();
+      clienteExistente = result.data;
+      checkError = result.error;
+    }
+
+    if (checkError || !clienteExistente) {
+      return NextResponse.json(
+        { error: 'Cliente não encontrado ou sem permissão' },
+        { status: 404 }
+      );
+    }
+
+    // Cliente pode editar apenas se for dono
+    const isOwner = clienteExistente.usuario_id === user.id;
+    
+    if (!isAgencia && !isOwner) {
+      return NextResponse.json(
+        { error: 'Sem permissão para editar este cliente' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
+
+    // 🚫 NUNCA permitir alterar usuario_id
+    delete body.usuario_id;
 
     // Se estiver tentando atualizar nome_instancia, normalizar
     if (body.nome_instancia) {
@@ -67,7 +145,34 @@ export async function PATCH(
       }
     }
 
-    const { data, error } = await clientesQueries.atualizar(id, body);
+    // Atualizar (usando admin se for agência, normal se for cliente)
+    let data, error;
+    
+    if (isAgencia) {
+      const result = await supabaseAdmin
+        .from('clientes')
+        .update({
+          ...body,
+          atualizado_em: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select()
+        .single();
+      data = result.data;
+      error = result.error;
+    } else {
+      const result = await supabase
+        .from('clientes')
+        .update({
+          ...body,
+          atualizado_em: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select()
+        .single();
+      data = result.data;
+      error = result.error;
+    }
 
     if (error) {
       console.error('Erro ao atualizar cliente:', error);
@@ -90,7 +195,9 @@ export async function PATCH(
       );
     }
 
+    console.log(`✏️ Cliente atualizado: ${clienteExistente.nome_cliente}`);
     return NextResponse.json(data);
+    
   } catch (error) {
     console.error('Erro no servidor:', error);
     return NextResponse.json(
@@ -106,11 +213,91 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createClient(); // ← AWAIT aqui!
+    
     // CRÍTICO: await params no Next.js 15+
     const params = await context.params;
     const id = params.id;
 
-    const { data, error } = await clientesQueries.desativar(id);
+    // 🔐 Autenticar usuário
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Não autenticado' },
+        { status: 401 }
+      );
+    }
+
+    // Verificar role
+    const isAgencia = await verificarPermissaoAgencia(user.id);
+
+    // Buscar cliente
+    let clienteExistente, checkError;
+    
+    if (isAgencia) {
+      const result = await supabaseAdmin
+        .from('clientes')
+        .select('id, usuario_id, nome_cliente')
+        .eq('id', id)
+        .single();
+      clienteExistente = result.data;
+      checkError = result.error;
+    } else {
+      const result = await supabase
+        .from('clientes')
+        .select('id, usuario_id, nome_cliente')
+        .eq('id', id)
+        .eq('usuario_id', user.id)
+        .single();
+      clienteExistente = result.data;
+      checkError = result.error;
+    }
+
+    if (checkError || !clienteExistente) {
+      return NextResponse.json(
+        { error: 'Cliente não encontrado ou sem permissão' },
+        { status: 404 }
+      );
+    }
+
+    const isOwner = clienteExistente.usuario_id === user.id;
+
+    if (!isAgencia && !isOwner) {
+      return NextResponse.json(
+        { error: 'Sem permissão para deletar este cliente' },
+        { status: 403 }
+      );
+    }
+
+    // 🗑️ Soft delete (usando admin se for agência, normal se for cliente)
+    let data, error;
+    
+    if (isAgencia) {
+      const result = await supabaseAdmin
+        .from('clientes')
+        .update({ 
+          ativo: false,
+          atualizado_em: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select()
+        .single();
+      data = result.data;
+      error = result.error;
+    } else {
+      const result = await supabase
+        .from('clientes')
+        .update({ 
+          ativo: false,
+          atualizado_em: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select()
+        .single();
+      data = result.data;
+      error = result.error;
+    }
 
     if (error) {
       console.error('Erro ao desativar cliente:', error);
@@ -120,10 +307,12 @@ export async function DELETE(
       );
     }
 
-    return NextResponse.json(
-      { message: 'Cliente desativado com sucesso', data },
-      { status: 200 }
-    );
+    console.log(`🗑️ Cliente desativado: ${clienteExistente.nome_cliente}`);
+    return NextResponse.json({ 
+      message: 'Cliente desativado com sucesso', 
+      data 
+    });
+    
   } catch (error) {
     console.error('Erro no servidor:', error);
     return NextResponse.json(

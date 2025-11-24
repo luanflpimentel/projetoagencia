@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { uazapiService } from '@/lib/services/uazapi.service';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-server';
 import { logsQueries } from '@/lib/supabase-queries';
 
 export async function DELETE(
@@ -21,6 +21,9 @@ export async function DELETE(
         { status: 400 }
       );
     }
+
+    // Criar cliente autenticado
+    const supabase = await createClient();
 
     // Buscar cliente e token
     const { data: cliente, error: clienteError } = await supabase

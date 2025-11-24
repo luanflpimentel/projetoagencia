@@ -48,11 +48,11 @@ export default function FormEditarUsuario({ usuario, onClose, onSuccess }: Props
       return 'Nome completo deve ter no mínimo 3 caracteres';
     }
 
-    if (formData.role === 'super_admin' && formData.cliente_id) {
-      return 'Super Admin não deve estar associado a um cliente';
+    if (formData.role === 'agencia' && formData.cliente_id) {
+      return 'Agência não deve estar associada a um cliente';
     }
 
-    if (formData.role !== 'super_admin' && !formData.cliente_id) {
+    if (formData.role === 'cliente' && !formData.cliente_id) {
       return 'Este tipo de usuário precisa estar associado a um cliente';
     }
 
@@ -81,7 +81,7 @@ export default function FormEditarUsuario({ usuario, onClose, onSuccess }: Props
           nome_completo: formData.nome_completo.trim(),
           telefone: formData.telefone.trim() || null,
           role: formData.role,
-          cliente_id: formData.role === 'super_admin' ? null : formData.cliente_id,
+          cliente_id: formData.role === 'agencia' ? null : formData.cliente_id,
           atualizado_em: new Date().toISOString(),
           atualizado_por: user.id,
         })
@@ -213,14 +213,13 @@ export default function FormEditarUsuario({ usuario, onClose, onSuccess }: Props
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
                   required
                 >
-                  <option value="super_admin">👑 Super Admin (Agência)</option>
-                  <option value="admin_cliente">👨‍💼 Admin do Cliente</option>
-                  <option value="usuario_cliente">👤 Usuário do Cliente</option>
+                  <option value="agencia">🏢 Agência (acesso completo)</option>
+                  <option value="cliente">👤 Cliente (apenas seu WhatsApp)</option>
                 </select>
               </div>
 
               {/* Cliente */}
-              {formData.role !== 'super_admin' && (
+              {formData.role === 'cliente' && (
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Cliente <span className="text-red-500">*</span>

@@ -63,6 +63,7 @@ export interface Cliente {
   status_conexao: StatusConexao; // default: 'desconectado'
   ultima_conexao?: string | null; // ISO timestamp
   ultima_desconexao?: string | null; // ISO timestamp
+  usuario_id: string; // ✨ NOVO - FK para auth.users
   ativo: boolean; // default: true
   criado_em: string; // ISO timestamp
   atualizado_em: string; // ISO timestamp
@@ -125,6 +126,7 @@ export interface VwClienteLista {
   nome_agente: string;
   prompt_editado_manualmente: boolean;
   ultima_conexao: string | null;
+  usuario_id: string; // ✨ NOVO - Permite filtro no frontend
   ativo: boolean;
 }
 
@@ -147,6 +149,7 @@ export interface VwClienteComTemplates {
   nome_agente: string;
   status_conexao: StatusConexao;
   prompt_editado_manualmente: boolean;
+  usuario_id: string; // ✨ NOVO
   ativo: boolean;
   templates: Array<{
     template_id: string;
@@ -171,6 +174,7 @@ export interface ClienteFormData {
   nome_escritorio: string;
   nome_agente?: string; // default: 'Julia'
   template_ids: string[]; // IDs dos templates selecionados
+  // usuario_id será preenchido automaticamente no backend
 }
 
 export interface TemplateFormData {
@@ -208,7 +212,7 @@ export interface PaginatedResponse<T> {
 // ===== TIPOS UTILITÁRIOS =====
 
 export type ClienteInsert = Omit<Cliente, 'id' | 'criado_em' | 'atualizado_em'>;
-export type ClienteUpdate = Partial<Omit<Cliente, 'id' | 'criado_em'>>;
+export type ClienteUpdate = Partial<Omit<Cliente, 'id' | 'criado_em' | 'usuario_id'>>; // ✨ usuario_id não pode ser alterado
 
 export type TemplateInsert = Omit<Template, 'id' | 'criado_em' | 'atualizado_em'>;
 export type TemplateUpdate = Partial<Omit<Template, 'id' | 'criado_em'>>;
@@ -465,13 +469,10 @@ export interface DashboardStats {
 
 
 // ============================================
-// ADICIONAR AO FINAL DO ARQUIVO:
-// lib/types.ts
+// SISTEMA DE USUÁRIOS MULTI-TENANT
 // ============================================
 
-// ===== SISTEMA DE USUÁRIOS MULTI-TENANT =====
-
-export type UserRole = 'super_admin' | 'admin_cliente' | 'usuario_cliente';
+export type UserRole = 'agencia' | 'cliente';
 
 export interface Usuario {
   id: string;
@@ -564,9 +565,8 @@ export interface PermissoesUsuario {
   pode_ver_todos_logs: boolean;
   
   // Sistema
-  is_super_admin: boolean;
-  is_admin_cliente: boolean;
-  is_usuario_comum: boolean;
+  is_agencia: boolean;
+  is_cliente: boolean;
 }
 
 export interface UsuarioAutenticado {
@@ -586,9 +586,8 @@ export interface EstatisticasUsuarios {
   usuarios_ativos: number;
   usuarios_inativos: number;
   por_role: {
-    super_admin: number;
-    admin_cliente: number;
-    usuario_cliente: number;
+    agencia: number;
+    cliente: number;
   };
   convites_pendentes: number;
 }
@@ -599,13 +598,11 @@ export type RoleLabel = {
 };
 
 export const ROLE_LABELS: RoleLabel = {
-  super_admin: 'Super Admin',
-  admin_cliente: 'Administrador',
-  usuario_cliente: 'Usuário',
+  agencia: 'Agência',
+  cliente: 'Cliente',
 };
 
 export const ROLE_DESCRIPTIONS: RoleLabel = {
-  super_admin: 'Acesso total ao sistema (Agência)',
-  admin_cliente: 'Administrador do cliente (gerencia usuários)',
-  usuario_cliente: 'Usuário comum (acesso limitado)',
+  agencia: 'Acesso completo ao sistema (vê e gerencia tudo)',
+  cliente: 'Acesso limitado (vê apenas seu WhatsApp)',
 };
