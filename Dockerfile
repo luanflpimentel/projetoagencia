@@ -1,4 +1,4 @@
-# 🐳 Dockerfile - BotConversa Next.js 16
+# 🐳 Dockerfile - Agência Talismã Next.js 16
 # Build otimizado para produção
 
 # Args de build para variáveis públicas do Next.js

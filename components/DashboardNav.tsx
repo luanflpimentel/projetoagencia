@@ -69,7 +69,7 @@ export default function DashboardNav({ userEmail, userRole }: DashboardNavProps)
           <div className="flex items-center">
             <Link href="/dashboard" className="flex items-center space-x-2">
               <span className="text-2xl">💬</span>
-              <span className="text-xl font-bold text-gray-900">BotConversa</span>
+              <span className="text-xl font-bold text-gray-900">Agência Talismã</span>
             </Link>
           </div>
 

@@ -1,5 +1,5 @@
 // ============================================
-// SUPABASE QUERIES - BotConversa
+// SUPABASE QUERIES - Agência Talismã
 // Queries prontas para usar no Next.js
 // ============================================
 

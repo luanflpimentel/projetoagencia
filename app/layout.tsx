@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'BotConversa - Gestão de Assistentes WhatsApp',
+  title: 'Agência Talismã - Gestão de Assistentes WhatsApp',
   description: 'Plataforma SaaS para gerenciamento de assistentes virtuais WhatsApp com IA',
 };
 

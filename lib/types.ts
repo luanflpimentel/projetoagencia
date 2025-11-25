@@ -1,5 +1,5 @@
 // ============================================
-// TYPES TYPESCRIPT - BotConversa
+// TYPES TYPESCRIPT - Agência Talismã
 // Gerados do Schema Supabase PostgreSQL
 // ============================================
 
