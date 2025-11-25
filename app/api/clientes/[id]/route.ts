@@ -17,7 +17,7 @@ export async function GET(
 
     // 🔐 Autenticar usuário
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Não autenticado' },
@@ -25,30 +25,50 @@ export async function GET(
       );
     }
 
-    // Buscar cliente (RLS já filtra automaticamente)
-    const { data, error } = await supabase
+    console.log('🔍 Buscando cliente com ID:', id);
+
+    // Verificar role do usuário e cliente_id
+    const { data: usuario, error: usuarioError } = await supabase
+      .from('usuarios')
+      .select('role, cliente_id')
+      .eq('id', user.id)
+      .single();
+
+    if (usuarioError) {
+      console.error('❌ Erro ao buscar usuário:', usuarioError);
+      return NextResponse.json(
+        { error: 'Erro ao verificar permissões' },
+        { status: 500 }
+      );
+    }
+
+    const isAgencia = await verificarPermissaoAgencia(user.id);
+
+    // Buscar cliente usando supabaseAdmin (bypassa RLS)
+    const { data, error } = await supabaseAdmin
       .from('clientes')
       .select('*')
       .eq('id', id)
       .single();
 
-    if (error) {
-      console.error('Erro ao buscar cliente:', error);
-      
-      // Se não encontrou, pode ser por não ter permissão ou não existir
-      return NextResponse.json(
-        { error: 'Cliente não encontrado ou sem permissão' },
-        { status: 404 }
-      );
-    }
-
-    if (!data) {
+    if (error || !data) {
+      console.error('❌ Cliente não encontrado:', { id, error });
       return NextResponse.json(
         { error: 'Cliente não encontrado' },
         { status: 404 }
       );
     }
 
+    // Se for cliente, verificar se tem permissão para ver este cliente
+    if (!isAgencia && usuario.cliente_id !== id) {
+      console.warn(`⚠️ Usuário ${user.email} tentou acessar cliente ${id} sem permissão`);
+      return NextResponse.json(
+        { error: 'Sem permissão para acessar este cliente' },
+        { status: 403 }
+      );
+    }
+
+    console.log('✅ Cliente encontrado:', data.nome_cliente);
     return NextResponse.json(data);
     
   } catch (error) {
