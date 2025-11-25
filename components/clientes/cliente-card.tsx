@@ -13,9 +13,10 @@ import type { VwClienteLista } from '@/lib/types';
 interface ClienteCardProps {
   cliente: VwClienteLista;
   onDelete?: (id: string) => void;
+  userRole?: 'agencia' | 'cliente';
 }
 
-export function ClienteCard({ cliente, onDelete }: ClienteCardProps) {
+export function ClienteCard({ cliente, onDelete, userRole = 'cliente' }: ClienteCardProps) {
   // Cores do badge de status
   const statusConfig = {
     conectado: {
@@ -91,7 +92,7 @@ export function ClienteCard({ cliente, onDelete }: ClienteCardProps) {
       </CardContent>
 
       <CardFooter className="flex flex-wrap gap-2">
-        {/* ✅ NOVO: Botão Testar Prompt - FASE 7.0 */}
+        {/* ✅ Testar - Visível para todos */}
         <Button variant="outline" size="sm" asChild className="flex-1 min-w-[120px]">
           <Link href={`/dashboard/clientes/${cliente.id}/teste-prompt`}>
             <TestTube className="h-4 w-4 mr-2" />
@@ -99,6 +100,7 @@ export function ClienteCard({ cliente, onDelete }: ClienteCardProps) {
           </Link>
         </Button>
 
+        {/* ✅ Editar - Visível para todos */}
         <Button variant="outline" size="sm" asChild className="flex-1 min-w-[120px]">
           <Link href={`/dashboard/clientes/${cliente.id}`}>
             <Edit className="h-4 w-4 mr-2" />
@@ -106,14 +108,18 @@ export function ClienteCard({ cliente, onDelete }: ClienteCardProps) {
           </Link>
         </Button>
 
-        <Button variant="outline" size="sm" asChild className="flex-1 min-w-[120px]">
-          <Link href={`/dashboard/clientes/${cliente.id}/configurar`}>
-            <Settings className="h-4 w-4 mr-2" />
-            Configurar
-          </Link>
-        </Button>
+        {/* 🔒 Configurar - Apenas para agência */}
+        {userRole === 'agencia' && (
+          <Button variant="outline" size="sm" asChild className="flex-1 min-w-[120px]">
+            <Link href={`/dashboard/clientes/${cliente.id}/configurar`}>
+              <Settings className="h-4 w-4 mr-2" />
+              Configurar
+            </Link>
+          </Button>
+        )}
 
-        {onDelete && (
+        {/* 🔒 Excluir - Apenas para agência */}
+        {userRole === 'agencia' && onDelete && (
           <Button
             variant="ghost"
             size="sm"
@@ -124,7 +130,7 @@ export function ClienteCard({ cliente, onDelete }: ClienteCardProps) {
           </Button>
         )}
 
-        {/* ✅ Botões de conexão WhatsApp */}
+        {/* ✅ Botões de conexão WhatsApp - Visível para todos */}
         <div className="w-full mt-2">
           <ConnectionActions
             instanceName={cliente.nome_instancia}

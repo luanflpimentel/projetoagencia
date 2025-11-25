@@ -8,10 +8,12 @@ import { Input } from '@/components/ui/input';
 import { ClienteCard } from '@/components/clientes/cliente-card';
 import { Plus, Search, Loader2, RefreshCw } from 'lucide-react';
 import type { VwClienteLista, StatusConexao } from '@/lib/types';
+import { useAuthWithPermissions } from '@/hooks/useAuthWithPermissions';
 
 export default function ClientesPage() {
   const router = useRouter();
-  
+  const { usuario } = useAuthWithPermissions();
+
   const [clientes, setClientes] = useState<VwClienteLista[]>([]);
   const [filteredClientes, setFilteredClientes] = useState<VwClienteLista[]>([]);
   const [loading, setLoading] = useState(true);
@@ -203,8 +205,8 @@ export default function ClientesPage() {
         </div>
         <div className="flex gap-2">
           {/* Botão Atualizar Status */}
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={handleManualSync}
             disabled={syncing}
             title="Atualizar status de todos os clientes"
@@ -212,12 +214,14 @@ export default function ClientesPage() {
             <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
             {syncing ? 'Atualizando...' : 'Atualizar Status'}
           </Button>
-          
-          {/* Botão Novo Cliente */}
-          <Button onClick={() => router.push('/dashboard/clientes/novo')}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Cliente
-          </Button>
+
+          {/* 🔒 Botão Novo Cliente - Apenas para agência */}
+          {usuario?.role === 'agencia' && (
+            <Button onClick={() => router.push('/dashboard/clientes/novo')}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Cliente
+            </Button>
+          )}
         </div>
       </div>
 
@@ -273,7 +277,8 @@ export default function ClientesPage() {
             <ClienteCard
               key={cliente.id}
               cliente={cliente}
-              onDelete={handleDelete}
+              onDelete={usuario?.role === 'agencia' ? handleDelete : undefined}
+              userRole={usuario?.role}
             />
           ))}
         </div>
