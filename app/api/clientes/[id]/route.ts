@@ -102,42 +102,41 @@ export async function PATCH(
       );
     }
 
-    // Verificar role do usuário
-    const isAgencia = await verificarPermissaoAgencia(user.id);
+    // Verificar role do usuário e cliente_id
+    const { data: usuario, error: usuarioError } = await supabase
+      .from('usuarios')
+      .select('role, cliente_id')
+      .eq('id', user.id)
+      .single();
 
-    // Buscar cliente (usando admin se for agência, normal se for cliente)
-    let clienteExistente, checkError;
-    
-    if (isAgencia) {
-      const result = await supabaseAdmin
-        .from('clientes')
-        .select('id, usuario_id, nome_cliente')
-        .eq('id', id)
-        .single();
-      clienteExistente = result.data;
-      checkError = result.error;
-    } else {
-      const result = await supabase
-        .from('clientes')
-        .select('id, usuario_id, nome_cliente')
-        .eq('id', id)
-        .eq('usuario_id', user.id)
-        .single();
-      clienteExistente = result.data;
-      checkError = result.error;
+    if (usuarioError) {
+      console.error('❌ Erro ao buscar usuário:', usuarioError);
+      return NextResponse.json(
+        { error: 'Erro ao verificar permissões' },
+        { status: 500 }
+      );
     }
 
+    const isAgencia = await verificarPermissaoAgencia(user.id);
+
+    // Buscar cliente usando supabaseAdmin (bypassa RLS)
+    const { data: clienteExistente, error: checkError } = await supabaseAdmin
+      .from('clientes')
+      .select('id, nome_cliente')
+      .eq('id', id)
+      .single();
+
     if (checkError || !clienteExistente) {
+      console.error('❌ Cliente não encontrado:', { id, error: checkError });
       return NextResponse.json(
-        { error: 'Cliente não encontrado ou sem permissão' },
+        { error: 'Cliente não encontrado' },
         { status: 404 }
       );
     }
 
-    // Cliente pode editar apenas se for dono
-    const isOwner = clienteExistente.usuario_id === user.id;
-    
-    if (!isAgencia && !isOwner) {
+    // Se for cliente, verificar se tem permissão para editar este cliente
+    if (!isAgencia && usuario.cliente_id !== id) {
+      console.warn(`⚠️ Usuário ${user.email} tentou editar cliente ${id} sem permissão`);
       return NextResponse.json(
         { error: 'Sem permissão para editar este cliente' },
         { status: 403 }
@@ -165,34 +164,16 @@ export async function PATCH(
       }
     }
 
-    // Atualizar (usando admin se for agência, normal se for cliente)
-    let data, error;
-    
-    if (isAgencia) {
-      const result = await supabaseAdmin
-        .from('clientes')
-        .update({
-          ...body,
-          atualizado_em: new Date().toISOString(),
-        })
-        .eq('id', id)
-        .select()
-        .single();
-      data = result.data;
-      error = result.error;
-    } else {
-      const result = await supabase
-        .from('clientes')
-        .update({
-          ...body,
-          atualizado_em: new Date().toISOString(),
-        })
-        .eq('id', id)
-        .select()
-        .single();
-      data = result.data;
-      error = result.error;
-    }
+    // Atualizar usando supabaseAdmin (permissões já foram verificadas acima)
+    const { data, error } = await supabaseAdmin
+      .from('clientes')
+      .update({
+        ...body,
+        atualizado_em: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
 
     if (error) {
       console.error('Erro ao atualizar cliente:', error);
@@ -249,75 +230,57 @@ export async function DELETE(
       );
     }
 
-    // Verificar role
-    const isAgencia = await verificarPermissaoAgencia(user.id);
+    // Verificar role do usuário
+    const { data: usuario, error: usuarioError } = await supabase
+      .from('usuarios')
+      .select('role, cliente_id')
+      .eq('id', user.id)
+      .single();
 
-    // Buscar cliente
-    let clienteExistente, checkError;
-    
-    if (isAgencia) {
-      const result = await supabaseAdmin
-        .from('clientes')
-        .select('id, usuario_id, nome_cliente')
-        .eq('id', id)
-        .single();
-      clienteExistente = result.data;
-      checkError = result.error;
-    } else {
-      const result = await supabase
-        .from('clientes')
-        .select('id, usuario_id, nome_cliente')
-        .eq('id', id)
-        .eq('usuario_id', user.id)
-        .single();
-      clienteExistente = result.data;
-      checkError = result.error;
-    }
-
-    if (checkError || !clienteExistente) {
+    if (usuarioError) {
+      console.error('❌ Erro ao buscar usuário:', usuarioError);
       return NextResponse.json(
-        { error: 'Cliente não encontrado ou sem permissão' },
-        { status: 404 }
+        { error: 'Erro ao verificar permissões' },
+        { status: 500 }
       );
     }
 
-    const isOwner = clienteExistente.usuario_id === user.id;
+    const isAgencia = await verificarPermissaoAgencia(user.id);
 
-    if (!isAgencia && !isOwner) {
+    // 🔒 Apenas agência pode excluir
+    if (!isAgencia) {
+      console.warn(`⚠️ Usuário ${user.email} (role: ${usuario?.role}) tentou excluir cliente sem permissão`);
       return NextResponse.json(
-        { error: 'Sem permissão para deletar este cliente' },
+        { error: 'Sem permissão para excluir clientes' },
         { status: 403 }
       );
     }
 
-    // 🗑️ Soft delete (usando admin se for agência, normal se for cliente)
-    let data, error;
-    
-    if (isAgencia) {
-      const result = await supabaseAdmin
-        .from('clientes')
-        .update({ 
-          ativo: false,
-          atualizado_em: new Date().toISOString(),
-        })
-        .eq('id', id)
-        .select()
-        .single();
-      data = result.data;
-      error = result.error;
-    } else {
-      const result = await supabase
-        .from('clientes')
-        .update({ 
-          ativo: false,
-          atualizado_em: new Date().toISOString(),
-        })
-        .eq('id', id)
-        .select()
-        .single();
-      data = result.data;
-      error = result.error;
+    // Buscar cliente usando supabaseAdmin
+    const { data: clienteExistente, error: checkError } = await supabaseAdmin
+      .from('clientes')
+      .select('id, nome_cliente')
+      .eq('id', id)
+      .single();
+
+    if (checkError || !clienteExistente) {
+      console.error('❌ Cliente não encontrado:', { id, error: checkError });
+      return NextResponse.json(
+        { error: 'Cliente não encontrado' },
+        { status: 404 }
+      );
     }
+
+    // 🗑️ Soft delete usando supabaseAdmin
+    const { data, error } = await supabaseAdmin
+      .from('clientes')
+      .update({
+        ativo: false,
+        atualizado_em: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
 
     if (error) {
       console.error('Erro ao desativar cliente:', error);

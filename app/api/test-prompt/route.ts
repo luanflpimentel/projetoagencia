@@ -1,22 +1,11 @@
 // app/api/test-prompt/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase-server';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // Forçar rota dinâmica (não gerar no build)
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-// Helper para criar cliente Supabase (lazy loading)
-function getSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Supabase não configurado');
-  }
-
-  return createClient(supabaseUrl, supabaseKey);
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,90 +19,121 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Criar cliente Supabase apenas quando necessário
-    const supabase = getSupabaseClient();
+    // Verificar autenticação
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    // Buscar cliente no banco
-    const { data: cliente, error } = await supabase
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Não autenticado' },
+        { status: 401 }
+      );
+    }
+
+    // Buscar cliente no banco usando supabaseAdmin (bypassa RLS)
+    const { data: cliente, error } = await supabaseAdmin
       .from('clientes')
       .select('*')
       .eq('id', clienteId)
       .single();
 
     if (error || !cliente) {
+      console.error('❌ Cliente não encontrado:', { clienteId, error });
       return NextResponse.json(
         { error: 'Cliente não encontrado' },
         { status: 404 }
       );
     }
 
-    // Gerar resposta mockada (simulando IA)
-    const resposta = await gerarRespostaMock(mensagem, cliente.prompt_sistema);
+    console.log('🔄 Enviando mensagem para N8N webhook...');
 
-    // Retornar resposta
-    return NextResponse.json({
-      success: true,
-      resposta,
-      metadata: {
-        modelo: 'mock-gpt-4',
-        temperatura: 0.7,
-        tokens: Math.floor(Math.random() * 200) + 50,
-        tempo_ms: Math.floor(Math.random() * 1000) + 500,
-      },
-    });
+    // Chamar webhook do N8N
+    const webhookUrl = 'https://webhook.zeyno.dev.br/webhook/testador';
+
+    const webhookPayload = {
+      message: mensagem,
+      systemPrompt: cliente.prompt_sistema,
+      clientId: clienteId,
+      clientName: cliente.nome_cliente,
+      agentName: cliente.nome_agente,
+      instanceName: cliente.nome_instancia,
+    };
+
+    console.log('📤 Payload enviado:', webhookPayload);
+
+    const startTime = Date.now();
+
+    try {
+      const webhookResponse = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookPayload),
+        signal: AbortSignal.timeout(30000), // 30 segundos timeout
+      });
+
+      const endTime = Date.now();
+      const responseTime = endTime - startTime;
+
+      if (!webhookResponse.ok) {
+        const errorText = await webhookResponse.text();
+        console.error('❌ Erro no webhook N8N:', {
+          status: webhookResponse.status,
+          statusText: webhookResponse.statusText,
+          error: errorText,
+        });
+
+        return NextResponse.json(
+          { error: `Erro no webhook: ${webhookResponse.status} - ${errorText}` },
+          { status: 500 }
+        );
+      }
+
+      const webhookData = await webhookResponse.json();
+      console.log('✅ Resposta do N8N recebida:', webhookData);
+
+      const resposta = webhookData.output || webhookData.response || 'Sem resposta';
+
+      return NextResponse.json({
+        success: true,
+        resposta,
+        metadata: {
+          modelo: 'n8n-webhook',
+          tempo_ms: responseTime,
+          clienteNome: cliente.nome_cliente,
+          agenteNome: cliente.nome_agente,
+        },
+      });
+
+    } catch (fetchError: any) {
+      const endTime = Date.now();
+      const responseTime = endTime - startTime;
+
+      console.error('❌ Erro ao chamar webhook N8N:', {
+        error: fetchError.message,
+        tempo_ms: responseTime,
+      });
+
+      // Verificar se foi timeout
+      if (fetchError.name === 'AbortError' || fetchError.name === 'TimeoutError') {
+        return NextResponse.json(
+          { error: 'Timeout: O webhook demorou mais de 30 segundos para responder' },
+          { status: 504 }
+        );
+      }
+
+      return NextResponse.json(
+        { error: `Erro ao conectar com webhook: ${fetchError.message}` },
+        { status: 500 }
+      );
+    }
+
   } catch (error: any) {
-    console.error('Erro ao processar teste:', error);
+    console.error('❌ Erro ao processar teste:', error);
     return NextResponse.json(
       { error: error.message || 'Erro ao processar teste' },
       { status: 500 }
     );
   }
-}
-
-// Função que simula resposta de IA
-async function gerarRespostaMock(mensagem: string, prompt: string): Promise<string> {
-  // Simula delay de API (500ms - 1.5s)
-  await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000 + 500));
-
-  const mensagemLower = mensagem.toLowerCase();
-
-  // Respostas contextuais baseadas na mensagem
-  if (mensagemLower.includes('olá') || mensagemLower.includes('oi') || mensagemLower.includes('bom dia')) {
-    return 'Olá! Bem-vindo ao nosso escritório. Como posso ajudá-lo hoje? Estou aqui para responder suas dúvidas jurídicas e agendar consultas.';
-  }
-
-  if (mensagemLower.includes('preço') || mensagemLower.includes('custo') || mensagemLower.includes('quanto custa')) {
-    return 'Os valores variam conforme a complexidade do caso. Para uma análise precisa e orçamento personalizado, recomendo agendar uma consulta inicial. Posso te ajudar com isso agora mesmo!';
-  }
-
-  if (mensagemLower.includes('horário') || mensagemLower.includes('funciona')) {
-    return 'Nosso escritório funciona de segunda a sexta, das 9h às 18h. Atendemos também por agendamento. Gostaria de marcar um horário?';
-  }
-
-  if (mensagemLower.includes('agendar') || mensagemLower.includes('consulta') || mensagemLower.includes('reunião')) {
-    return 'Ótimo! Para agendar uma consulta, preciso de algumas informações: Qual seria sua disponibilidade de horário? E poderia me contar brevemente sobre seu caso?';
-  }
-
-  if (mensagemLower.includes('trabalhista') || mensagemLower.includes('trabalho')) {
-    return 'Sim, temos expertise em Direito Trabalhista. Atendemos casos de rescisão, horas extras, danos morais, acidentes de trabalho e muito mais. Gostaria de agendar uma análise do seu caso?';
-  }
-
-  if (mensagemLower.includes('família') || mensagemLower.includes('divórcio') || mensagemLower.includes('pensão')) {
-    return 'Atuamos em Direito de Família, incluindo divórcios, pensão alimentícia, guarda de filhos e partilha de bens. Nosso objetivo é resolver seu caso com rapidez e segurança jurídica. Posso agendar uma conversa?';
-  }
-
-  if (mensagemLower.includes('civil') || mensagemLower.includes('contrato')) {
-    return 'Atendemos diversas questões de Direito Civil, como contratos, indenizações, questões imobiliárias e mais. Para avaliar seu caso específico, recomendo uma consulta. Posso te ajudar a agendar?';
-  }
-
-  if (mensagemLower.includes('criminal') || mensagemLower.includes('penal')) {
-    return 'Prestamos assistência em Direito Criminal/Penal, defendendo seus direitos em todas as fases do processo. Cada caso requer análise específica. Vamos agendar uma consulta?';
-  }
-
-  if (mensagemLower.includes('obrigado') || mensagemLower.includes('obrigada')) {
-    return 'Por nada! Fico feliz em ajudar. Se precisar de mais alguma coisa ou quiser agendar uma consulta, é só me chamar. Estamos à disposição!';
-  }
-
-  // Resposta genérica
-  return `Entendo sua questão sobre "${mensagem}". Para te ajudar da melhor forma possível, recomendo que agendemos uma consulta para analisarmos seu caso detalhadamente. Nosso escritório está à disposição para esclarecer todas suas dúvidas. Posso te ajudar a marcar um horário?`;
 }
