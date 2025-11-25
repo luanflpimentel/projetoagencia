@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uazapiService } from '@/lib/services/uazapi.service';
 import { createClient } from '@/lib/supabase-server';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { logsQueries } from '@/lib/supabase-queries';
 
 export async function GET(
@@ -19,17 +20,26 @@ export async function GET(
       );
     }
 
-    // Criar cliente autenticado
+    // Verificar autenticação
     const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    // Buscar cliente e token
-    const { data: cliente, error: clienteError } = await supabase
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Não autenticado' },
+        { status: 401 }
+      );
+    }
+
+    // Buscar cliente usando supabaseAdmin (bypassa RLS)
+    const { data: cliente, error: clienteError } = await supabaseAdmin
       .from('clientes')
       .select('id, nome_cliente, instance_token')
       .eq('nome_instancia', instanceName)
       .single();
 
     if (clienteError || !cliente) {
+      console.error('❌ Cliente não encontrado:', { instanceName, error: clienteError });
       return NextResponse.json(
         { error: 'Cliente não encontrado' },
         { status: 404 }

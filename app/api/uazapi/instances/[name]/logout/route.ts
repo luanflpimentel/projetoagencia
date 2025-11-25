@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uazapiService } from '@/lib/services/uazapi.service';
 import { createClient } from '@/lib/supabase-server';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { logsQueries } from '@/lib/supabase-queries';
 
 export async function DELETE(
@@ -22,11 +23,19 @@ export async function DELETE(
       );
     }
 
-    // Criar cliente autenticado
+    // Verificar autenticação
     const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    // Buscar cliente e token
-    const { data: cliente, error: clienteError } = await supabase
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Não autenticado' },
+        { status: 401 }
+      );
+    }
+
+    // Buscar cliente e token usando supabaseAdmin (bypassa RLS)
+    const { data: cliente, error: clienteError } = await supabaseAdmin
       .from('clientes')
       .select('id, nome_cliente, instance_token')
       .eq('nome_instancia', instanceName)
