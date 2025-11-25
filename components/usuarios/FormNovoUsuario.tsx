@@ -161,7 +161,7 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
@@ -292,15 +292,19 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
             <div className="flex items-center space-x-2">
               <input
                 type={mostrarSenha ? "text" : "password"}
-                readOnly
                 value={formData.senha}
-                className="flex-1 border border-gray-300 rounded-lg px-4 py-2 bg-gray-50 font-mono text-sm"
+                onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+                className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                placeholder="Digite ou gere uma senha"
+                disabled={loading}
+                minLength={8}
               />
               <button
                 type="button"
                 onClick={() => setMostrarSenha(!mostrarSenha)}
                 className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
                 title={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                disabled={loading}
               >
                 {mostrarSenha ? '🙈' : '👁️'}
               </button>
@@ -309,6 +313,7 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
                 onClick={() => setFormData({ ...formData, senha: gerarSenha() })}
                 className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
                 title="Gerar nova senha"
+                disabled={loading}
               >
                 🔄
               </button>
@@ -317,6 +322,7 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
                 onClick={copiarSenha}
                 className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
                 title="Copiar senha"
+                disabled={loading}
               >
                 📋
               </button>
