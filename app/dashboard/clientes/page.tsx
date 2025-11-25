@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ClienteCard } from '@/components/clientes/cliente-card';
-import { Plus, Search, Loader2, RefreshCw } from 'lucide-react';
-import type { VwClienteLista, StatusConexao } from '@/lib/types';
+import { Plus, Search, Loader2 } from 'lucide-react';
+import type { VwClienteLista } from '@/lib/types';
 import { useAuthWithPermissions } from '@/hooks/useAuthWithPermissions';
 
 export default function ClientesPage() {
@@ -17,7 +17,6 @@ export default function ClientesPage() {
   const [clientes, setClientes] = useState<VwClienteLista[]>([]);
   const [filteredClientes, setFilteredClientes] = useState<VwClienteLista[]>([]);
   const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Buscar clientes
@@ -45,7 +44,6 @@ export default function ClientesPage() {
   const fetchClientes = async () => {
     try {
       setLoading(true);
-      console.log('🔄 [FRONTEND] Buscando clientes...');
       const response = await fetch('/api/clientes');
 
       if (!response.ok) {
@@ -53,14 +51,10 @@ export default function ClientesPage() {
       }
 
       const data = await response.json();
-      console.log('📦 [FRONTEND] Clientes recebidos:', {
-        quantidade: data?.length || 0,
-        dados: data
-      });
 
       // Verificar se é um array
       if (!Array.isArray(data)) {
-        console.error('❌ [FRONTEND] Resposta não é um array:', data);
+        console.error('Resposta não é um array:', data);
         setClientes([]);
         setFilteredClientes([]);
         return;
@@ -68,95 +62,13 @@ export default function ClientesPage() {
 
       setClientes(data);
       setFilteredClientes(data);
-
-      // 🔄 SINCRONIZAR STATUS REAL DA UAZAPI
-      // Executar em background sem bloquear a UI
-      syncClientesStatus(data);
     } catch (error) {
-      console.error('❌ [FRONTEND] Erro:', error);
+      console.error('Erro ao buscar clientes:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔄 Função para sincronizar status real de todos os clientes
-  const syncClientesStatus = async (clientesList: VwClienteLista[]) => {
-    console.log('🔄 Sincronizando status de', clientesList.length, 'clientes...');
-    
-    setSyncing(true);
-    
-    // Verificar status de cada cliente em paralelo
-    const promises = clientesList.map(async (cliente) => {
-      try {
-        const response = await fetch(
-          `/api/uazapi/instances/${cliente.nome_instancia}/status`
-        );
-        
-        if (response.ok) {
-          const statusData = await response.json();
-          const statusReal = (statusData.connected ? 'conectado' : 'desconectado') as StatusConexao;
-          
-          console.log(`✅ [${cliente.nome_instancia}] Status sincronizado:`, {
-            bancoBefore: cliente.status_conexao,
-            uazapiAtual: statusReal,
-            mudou: cliente.status_conexao !== statusReal
-          });
-          
-          return {
-            ...cliente,
-            status_conexao: statusReal
-          };
-        }
-        return cliente;
-      } catch (error) {
-        console.warn(`⚠️ [${cliente.nome_instancia}] Erro ao verificar status:`, error);
-        return cliente;
-      }
-    });
-
-    try {
-      const updatedClientes = await Promise.all(promises);
-      
-      // Verificar se houve mudanças
-      const mudancas = updatedClientes.filter((updated, index) => 
-        updated.status_conexao !== clientesList[index].status_conexao
-      );
-
-      if (mudancas.length > 0) {
-        console.log(`📝 ${mudancas.length} cliente(s) tiveram status atualizado`);
-        mudancas.forEach(c => {
-          console.log(`  - ${c.nome_instancia}: agora ${c.status_conexao}`);
-        });
-      }
-      
-      // Atualizar estado com status real
-      setClientes(updatedClientes);
-      setFilteredClientes(prev => {
-        // Manter filtro atual mas atualizar dados
-        if (searchTerm) {
-          const term = searchTerm.toLowerCase();
-          return updatedClientes.filter(c => 
-            c.nome_cliente.toLowerCase().includes(term) ||
-            c.nome_instancia.toLowerCase().includes(term) ||
-            c.nome_escritorio.toLowerCase().includes(term)
-          );
-        }
-        return updatedClientes;
-      });
-
-      console.log('✅ Sincronização completa!');
-    } catch (error) {
-      console.error('❌ Erro na sincronização:', error);
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  // 🔄 Função para forçar sincronização manual
-  const handleManualSync = async () => {
-    console.log('🔄 Sincronização manual iniciada');
-    await syncClientesStatus(clientes);
-  };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Deseja realmente desativar este cliente?')) {
@@ -196,25 +108,9 @@ export default function ClientesPage() {
           <h1 className="text-3xl font-bold">Clientes</h1>
           <p className="text-muted-foreground">
             Gerencie os escritórios conectados
-            {syncing && (
-              <span className="ml-2 text-blue-600 text-sm">
-                🔄 Sincronizando status...
-              </span>
-            )}
           </p>
         </div>
         <div className="flex gap-2">
-          {/* Botão Atualizar Status */}
-          <Button
-            variant="outline"
-            onClick={handleManualSync}
-            disabled={syncing}
-            title="Atualizar status de todos os clientes"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-            {syncing ? 'Atualizando...' : 'Atualizar Status'}
-          </Button>
-
           {/* 🔒 Botão Novo Cliente - Apenas para agência */}
           {usuario?.role === 'agencia' && (
             <Button onClick={() => router.push('/dashboard/clientes/novo')}>

@@ -15,12 +15,16 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 export function DashboardHeader() {
-  const { usuario } = useAuthWithPermissions();
+  const { usuario, logout } = useAuthWithPermissions();
   const router = useRouter();
 
   const handleLogout = async () => {
-    // Aqui você pode adicionar lógica de logout
-    router.push('/login');
+    try {
+      await logout();
+      router.push('/login');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
   };
 
   const getInitials = (email: string) => {
@@ -40,11 +44,6 @@ export function DashboardHeader() {
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Notificações */}
-          <Button variant="ghost" size="sm" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-1 right-1 h-2 w-2 bg-destructive rounded-full"></span>
-          </Button>
 
           {/* Menu do usuário */}
           <DropdownMenu>
