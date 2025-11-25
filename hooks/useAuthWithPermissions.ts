@@ -17,20 +17,15 @@ export function useAuthWithPermissions() {
   const loadingRef = useRef(false);
 
   useEffect(() => {
-    console.log('🔵 [AUTH HOOK] Inicializando...');
     loadUsuario();
 
     // Listener para mudança de auth (apenas login/logout, sem auto-refresh)
     const supabase = createClient();
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: any, session: any) => {
-        console.log('🔐 [AUTH HOOK] Auth state changed:', event);
-        
         if (event === 'SIGNED_IN' && session) {
-          console.log('✅ [AUTH HOOK] Usuário fez login');
           await loadUsuario();
         } else if (event === 'SIGNED_OUT') {
-          console.log('🚪 [AUTH HOOK] Usuário fez logout');
           setUser(null);
           setUsuario(null);
           setPermissoes(null);
@@ -39,7 +34,6 @@ export function useAuthWithPermissions() {
     );
 
     return () => {
-      console.log('🔵 [AUTH HOOK] Cleanup');
       subscription.unsubscribe();
     };
   }, []);
@@ -47,7 +41,6 @@ export function useAuthWithPermissions() {
   async function loadUsuario() {
     // Evitar múltiplas chamadas simultâneas
     if (loadingRef.current) {
-      console.log('⏸️ [AUTH HOOK] Já está carregando, ignorando chamada duplicada');
       return;
     }
 
@@ -56,20 +49,16 @@ export function useAuthWithPermissions() {
       setLoading(true);
       setError(null);
 
-      console.log('🔵 [AUTH HOOK] Carregando dados do usuário...');
-
       const supabase = createClient();
-      
+
       // Usar getUser() ao invés de getSession() (mais seguro)
       const { data: { user: authUser }, error: sessionError } = await supabase.auth.getUser();
-      
+
       if (sessionError) {
-        console.error('❌ [AUTH HOOK] Erro ao buscar usuário:', sessionError);
         throw sessionError;
       }
-      
+
       if (!authUser) {
-        console.log('⚠️ [AUTH HOOK] Nenhum usuário autenticado');
         setUser(null);
         setUsuario(null);
         setPermissoes(null);
@@ -77,7 +66,6 @@ export function useAuthWithPermissions() {
       }
 
       setUser(authUser);
-      console.log('✅ [AUTH HOOK] Auth user carregado:', authUser.id);
 
       // Query com TODOS os campos do tipo Usuario
       const { data: userData, error: userError } = await supabase
@@ -104,7 +92,6 @@ export function useAuthWithPermissions() {
         .single();
 
       if (userError) {
-        console.warn('⚠️ [AUTH HOOK] Usuário não encontrado na tabela usuarios:', userError);
         setError('Usuário não configurado no sistema');
         return;
       }
@@ -130,29 +117,24 @@ export function useAuthWithPermissions() {
 
       setUsuario(usuarioData);
       setPermissoes(calcularPermissoes(usuarioData));
-      console.log('✅ [AUTH HOOK] Usuário e permissões carregados:', usuarioData.email);
 
       // Atualizar último login (sem await para não bloquear)
       supabase
         .from('usuarios')
-        .update({ 
+        .update({
           ultimo_login: new Date().toISOString(),
-          atualizado_por: authUser.id 
+          atualizado_por: authUser.id
         })
         .eq('id', authUser.id)
-        .then(({ error }: { error: any }) => {
-          if (error) {
-            console.warn('⚠️ [AUTH HOOK] Erro ao atualizar último login:', error);
-          }
+        .then(() => {
+          // Silenciosamente atualiza
         });
 
     } catch (err) {
-      console.error('❌ [AUTH HOOK] Erro ao carregar usuário:', err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
     } finally {
       setLoading(false);
       loadingRef.current = false;
-      console.log('✅ [AUTH HOOK] Carregamento finalizado');
     }
   }
 

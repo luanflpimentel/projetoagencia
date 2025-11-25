@@ -26,6 +26,8 @@ function UsuariosPageContent() {
   const [usuarioParaEditar, setUsuarioParaEditar] = useState<Usuario | null>(null);
   const [usuarioLogado, setUsuarioLogado] = useState<Usuario | null>(null);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [filteredUsuarios, setFilteredUsuarios] = useState<Usuario[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [processando, setProcessando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +50,23 @@ function UsuariosPageContent() {
   useEffect(() => {
     loadUsuarios();
   }, []);
+
+  // Filtrar usuários baseado no termo de busca
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredUsuarios(usuarios);
+      return;
+    }
+
+    const term = searchTerm.toLowerCase();
+    const filtered = usuarios.filter(usuario =>
+      usuario.email.toLowerCase().includes(term) ||
+      (usuario.nome_completo?.toLowerCase().includes(term)) ||
+      (usuario.role?.toLowerCase().includes(term))
+    );
+
+    setFilteredUsuarios(filtered);
+  }, [searchTerm, usuarios]);
 
   async function loadUsuarios() {
     try {
@@ -171,8 +190,8 @@ function UsuariosPageContent() {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando usuários...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Carregando usuários...</p>
         </div>
       </div>
     );
@@ -180,22 +199,22 @@ function UsuariosPageContent() {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-        <h2 className="text-xl font-bold text-red-800 mb-2">Erro ao carregar usuários</h2>
-        <p className="text-red-700 mb-4">{error}</p>
+      <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-6">
+        <h2 className="text-xl font-bold text-destructive mb-2">Erro ao carregar usuários</h2>
+        <p className="text-destructive/90 mb-4">{error}</p>
         <div className="flex gap-2">
           <button
             onClick={() => {
               setError(null);
               loadUsuarios();
             }}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            className="px-4 py-2 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90"
           >
             Tentar Novamente
           </button>
           <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+            className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80"
           >
             Recarregar Página
           </button>
@@ -226,14 +245,14 @@ function UsuariosPageContent() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Gestão de Usuários</h1>
-            <p className="text-gray-600 mt-1">Gerencie os usuários do sistema</p>
+            <h1 className="text-3xl font-bold text-foreground">Gestão de Usuários</h1>
+            <p className="text-muted-foreground mt-1">Gerencie os usuários do sistema</p>
           </div>
           {permissoes?.pode_criar_usuarios && (
-            <button 
+            <button
               onClick={() => setMostrarFormNovo(true)}
               disabled={processando}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors flex items-center space-x-2 disabled:opacity-50"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -244,39 +263,67 @@ function UsuariosPageContent() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-3xl font-bold text-gray-900">{usuarios.length}</div>
-            <div className="text-sm text-gray-600">Total de Usuários</div>
+          <div className="bg-card rounded-lg shadow p-6 border border-border">
+            <div className="text-3xl font-bold text-foreground">{usuarios.length}</div>
+            <div className="text-sm text-muted-foreground">Total de Usuários</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-3xl font-bold text-green-600">
+          <div className="bg-card rounded-lg shadow p-6 border border-border">
+            <div className="text-3xl font-bold text-[#10b981]">
               {usuarios.filter(u => u.ativo).length}
             </div>
-            <div className="text-sm text-gray-600">Ativos</div>
+            <div className="text-sm text-muted-foreground">Ativos</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-3xl font-bold text-red-600">
+          <div className="bg-card rounded-lg shadow p-6 border border-border">
+            <div className="text-3xl font-bold text-destructive">
               {usuarios.filter(u => !u.ativo).length}
             </div>
-            <div className="text-sm text-gray-600">Inativos</div>
+            <div className="text-sm text-muted-foreground">Inativos</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-3xl font-bold text-purple-600">
+          <div className="bg-card rounded-lg shadow p-6 border border-border">
+            <div className="text-3xl font-bold text-accent">
               {usuarios.filter(u => u.role === 'agencia').length}
             </div>
-            <div className="text-sm text-gray-600">Super Admins</div>
+            <div className="text-sm text-muted-foreground">Super Admins</div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Usuários Cadastrados ({usuarios.length})
+        {/* Campo de Busca */}
+        <div className="relative">
+          <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Buscar por nome, email ou role..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring bg-card text-foreground"
+          />
+        </div>
+
+        <div className="bg-card rounded-lg shadow border border-border">
+          <div className="p-6 border-b border-border">
+            <h2 className="text-lg font-semibold text-foreground">
+              Usuários Cadastrados ({filteredUsuarios.length})
+              {searchTerm && (
+                <span className="text-sm text-muted-foreground ml-2">
+                  • {filteredUsuarios.length} de {usuarios.length} resultados
+                </span>
+              )}
             </h2>
           </div>
           <div className="p-6">
-            <div className="space-y-4">
-              {usuarios.map(usuario => {
+            {filteredUsuarios.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground mb-4">
+                  {searchTerm
+                    ? 'Nenhum usuário encontrado com esse termo'
+                    : 'Nenhum usuário cadastrado ainda'}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredUsuarios.map(usuario => {
                 const isUsuarioLogado = usuario.id === usuarioLogado?.id;
                 const podeAlterar = permissoes?.pode_editar_usuarios && !isUsuarioLogado;
 
@@ -284,32 +331,32 @@ function UsuariosPageContent() {
                   <div
                     key={usuario.id}
                     className={`border rounded-lg p-4 transition-all ${
-                      usuario.ativo 
-                        ? 'border-gray-200 hover:border-blue-300' 
-                        : 'border-gray-300 bg-gray-50'
+                      usuario.ativo
+                        ? 'border-border hover:border-primary/50 bg-card'
+                        : 'border-border bg-muted'
                     }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-1">
-                          <h3 className="text-lg font-semibold text-gray-900">
+                          <h3 className="text-lg font-semibold text-foreground">
                             {usuario.nome_completo || 'Sem nome'}
                           </h3>
-                          
+
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            usuario.ativo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                            usuario.ativo ? 'bg-[#10b981]/10 text-[#10b981]' : 'bg-destructive/10 text-destructive'
                           }`}>
                             {usuario.ativo ? '✅ Ativo' : '⏸️ Inativo'}
                           </span>
 
                           {isUsuarioLogado && (
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-accent/10 text-accent">
                               ⭐ Você
                             </span>
                           )}
                         </div>
-                        
-                        <p className="text-sm text-gray-600">{usuario.email}</p>
+
+                        <p className="text-sm text-muted-foreground">{usuario.email}</p>
                       </div>
 
                       <div className="flex items-center space-x-2">
@@ -317,7 +364,7 @@ function UsuariosPageContent() {
                           <button
                             onClick={() => setUsuarioParaEditar(usuario)}
                             disabled={processando}
-                            className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 text-sm font-medium disabled:opacity-50"
+                            className="px-3 py-1.5 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 text-sm font-medium disabled:opacity-50"
                           >
                             ✏️ Editar
                           </button>
@@ -328,9 +375,9 @@ function UsuariosPageContent() {
                             onClick={() => abrirModalToggleAtivo(usuario, !usuario.ativo)}
                             disabled={processando}
                             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
-                              usuario.ativo 
-                                ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-                                : 'bg-green-100 text-green-700 hover:bg-green-200'
+                              usuario.ativo
+                                ? 'bg-accent/10 text-accent hover:bg-accent/20'
+                                : 'bg-[#10b981]/10 text-[#10b981] hover:bg-[#10b981]/20'
                             }`}
                           >
                             {usuario.ativo ? '⏸️ Desativar' : '✅ Ativar'}
@@ -341,7 +388,8 @@ function UsuariosPageContent() {
                   </div>
                 );
               })}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 

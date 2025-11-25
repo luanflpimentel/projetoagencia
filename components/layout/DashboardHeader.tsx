@@ -28,10 +28,10 @@ export function DashboardHeader() {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
+    <header className="bg-card border-b border-border px-6 py-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">
+          <h1 className="text-xl font-semibold text-foreground">
             {usuario?.role === 'agencia' ? 'Gestão de Clientes' : 'Meu Negócio'}
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -43,7 +43,7 @@ export function DashboardHeader() {
           {/* Notificações */}
           <Button variant="ghost" size="sm" className="relative">
             <Bell className="h-5 w-5" />
-            <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+            <span className="absolute top-1 right-1 h-2 w-2 bg-destructive rounded-full"></span>
           </Button>
 
           {/* Menu do usuário */}
