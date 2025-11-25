@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Spinner, EmptyState } from '@/components/ui/loading';
+import ProtegerRota from '@/components/auth/ProtegerRota';
 
 interface Log {
   id: string;
@@ -19,6 +20,14 @@ interface Log {
 type FilterType = 'todos' | 'conexao' | 'desconexao' | 'prompt_atualizado' | 'cliente_criado' | 'cliente_editado' | 'erro';
 
 export default function LogsPage() {
+  return (
+    <ProtegerRota somenteAgencia>
+      <LogsPageContent />
+    </ProtegerRota>
+  );
+}
+
+function LogsPageContent() {
   const [logs, setLogs] = useState<Log[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterType>('todos');

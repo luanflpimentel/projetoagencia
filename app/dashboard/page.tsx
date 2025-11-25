@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import ProtegerRota from '@/components/auth/ProtegerRota';
 
 interface DashboardStats {
   totalClientes: number;
@@ -19,6 +20,14 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
+  return (
+    <ProtegerRota somenteAgencia>
+      <DashboardPageContent />
+    </ProtegerRota>
+  );
+}
+
+function DashboardPageContent() {
   const [stats, setStats] = useState<DashboardStats>({
     totalClientes: 0,
     clientesConectados: 0,

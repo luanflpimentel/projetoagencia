@@ -11,8 +11,17 @@ import { useAuthWithPermissions } from '@/hooks/useAuthWithPermissions';
 import type { Usuario } from '@/lib/types';
 import { createClient } from '@/lib/supabase-browser';
 import { toggleUsuarioAtivo } from '@/app/actions/usuarios'; // ← NOVA IMPORT
+import ProtegerRota from '@/components/auth/ProtegerRota';
 
 export default function UsuariosPage() {
+  return (
+    <ProtegerRota somenteAgencia>
+      <UsuariosPageContent />
+    </ProtegerRota>
+  );
+}
+
+function UsuariosPageContent() {
   const [mostrarFormNovo, setMostrarFormNovo] = useState(false);
   const [usuarioParaEditar, setUsuarioParaEditar] = useState<Usuario | null>(null);
   const [usuarioLogado, setUsuarioLogado] = useState<Usuario | null>(null);

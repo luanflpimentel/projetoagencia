@@ -18,10 +18,10 @@ export async function GET() {
       );
     }
 
-    // 🔍 Verificar role do usuário
+    // 🔍 Verificar role do usuário e cliente_id
     const { data: usuario, error: usuarioError } = await supabase
       .from('usuarios')
-      .select('role')
+      .select('role, cliente_id')
       .eq('id', user.id)
       .single();
 
@@ -47,12 +47,18 @@ export async function GET() {
       data = result.data;
       error = result.error;
     } else {
-      // 🔒 CLIENTE: usar supabase normal (RLS ativo)
-      console.log(`🔒 [CLIENTE] ${user.email} - Filtrando por usuario_id`);
+      // 🔒 CLIENTE: filtrar pelo cliente_id do usuário
+      console.log(`🔒 [CLIENTE] ${user.email} - Filtrando por cliente_id: ${usuario.cliente_id}`);
+
+      if (!usuario.cliente_id) {
+        console.warn('⚠️ Usuário tipo cliente sem cliente_id associado');
+        return NextResponse.json([]);
+      }
+
       const result = await supabase
         .from('clientes')
         .select('*')
-        .eq('usuario_id', user.id)
+        .eq('id', usuario.cliente_id)
         .order('criado_em', { ascending: false });
       data = result.data;
       error = result.error;

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import TemplateCard from '@/components/templates/template-card';
 import { Plus, Search } from 'lucide-react';
 import Link from 'next/link';
+import ProtegerRota from '@/components/auth/ProtegerRota';
 
 interface Template {
   id: string;
@@ -16,6 +17,14 @@ interface Template {
 }
 
 export default function TemplatesPage() {
+  return (
+    <ProtegerRota somenteAgencia>
+      <TemplatesPageContent />
+    </ProtegerRota>
+  );
+}
+
+function TemplatesPageContent() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
