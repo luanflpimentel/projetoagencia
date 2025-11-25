@@ -220,6 +220,7 @@ export function PromptEditor({ cliente, onSave }: PromptEditorProps) {
           disabled={generating || selectedTemplates.length === 0}
           className="w-full"
           size="lg"
+          variant="default"
         >
           {generating ? (
             <>
@@ -278,6 +279,7 @@ export function PromptEditor({ cliente, onSave }: PromptEditorProps) {
           disabled={loading || !prompt.trim()}
           size="lg"
           className="w-full"
+          variant="default"
         >
           {loading ? (
             <>

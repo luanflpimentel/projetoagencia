@@ -27,19 +27,19 @@ export default function TemplateCard({
   const hasMore = keywordsArray.length > 3;
 
   return (
-    <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border border-gray-200">
+    <div className="bg-card rounded-lg shadow hover:shadow-lg transition-shadow p-6 border border-border">
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">
+          <h3 className="text-lg font-semibold text-foreground mb-1">
             {nome_template}
           </h3>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             {area_atuacao}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+          <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded font-medium">
             {versao}
           </span>
         </div>
@@ -47,18 +47,18 @@ export default function TemplateCard({
 
       {/* Keywords */}
       <div className="mb-4">
-        <p className="text-xs text-gray-500 mb-2">Keywords:</p>
+        <p className="text-xs text-muted-foreground font-medium mb-2">Keywords:</p>
         <div className="flex flex-wrap gap-2">
           {displayKeywords.map((keyword, index) => (
             <span
               key={index}
-              className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded"
+              className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded font-medium"
             >
               {keyword.trim()}
             </span>
           ))}
           {hasMore && (
-            <span className="text-xs text-gray-500 px-2 py-1">
+            <span className="text-xs text-muted-foreground px-2 py-1 font-medium">
               +{keywordsArray.length - 3} mais
             </span>
           )}
@@ -66,7 +66,7 @@ export default function TemplateCard({
       </div>
 
       {/* Stats */}
-      <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
+      <div className="flex items-center gap-4 mb-4 text-sm text-foreground">
         <div className="flex items-center gap-1">
           <Users size={16} />
           <span>{total_clientes_usando} clientes</span>
@@ -74,17 +74,17 @@ export default function TemplateCard({
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2 pt-4 border-t border-gray-200">
+      <div className="flex gap-2 pt-4 border-t border-border">
         <Link
           href={`/dashboard/templates/${id}`}
-          className="flex-1 text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
+          className="flex-1 text-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm"
         >
           Editar
         </Link>
         {onDuplicate && (
           <button
             onClick={() => onDuplicate(id)}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-accent transition-colors"
             title="Duplicar"
           >
             <Copy size={18} />
@@ -93,7 +93,7 @@ export default function TemplateCard({
         {onDelete && (
           <button
             onClick={() => onDelete(id)}
-            className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+            className="px-4 py-2 bg-destructive/10 text-destructive rounded-lg hover:bg-destructive/20 transition-colors"
             title="Desativar"
           >
             <Trash2 size={18} />

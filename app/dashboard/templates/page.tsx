@@ -90,14 +90,14 @@ function TemplatesPageContent() {
   if (loading) {
     return (
       <div>
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Templates</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-6">Templates</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
-              <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-              <div className="h-20 bg-gray-200 rounded mb-4"></div>
-              <div className="h-10 bg-gray-200 rounded"></div>
+            <div key={i} className="bg-card rounded-lg shadow p-6 animate-pulse border border-border">
+              <div className="h-6 bg-muted rounded w-3/4 mb-4"></div>
+              <div className="h-4 bg-muted rounded w-1/2 mb-4"></div>
+              <div className="h-20 bg-muted rounded mb-4"></div>
+              <div className="h-10 bg-muted rounded"></div>
             </div>
           ))}
         </div>
@@ -109,12 +109,12 @@ function TemplatesPageContent() {
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
+        <h1 className="text-2xl font-bold text-foreground">
           Templates
         </h1>
         <Link
           href="/dashboard/templates/novo"
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
         >
           <Plus size={20} />
           Novo Template
@@ -124,27 +124,27 @@ function TemplatesPageContent() {
       {/* Search */}
       <div className="mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
           <input
             type="text"
             placeholder="Buscar templates..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-ring bg-card text-foreground"
           />
         </div>
       </div>
 
       {/* Grid de Templates */}
       {filteredTemplates.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <p className="text-gray-500 mb-4">
+        <div className="bg-card rounded-lg shadow p-12 text-center border border-border">
+          <p className="text-muted-foreground mb-4">
             {searchTerm ? 'Nenhum template encontrado' : 'Nenhum template cadastrado ainda'}
           </p>
           {!searchTerm && (
             <Link
               href="/dashboard/templates/novo"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
             >
               <Plus size={20} />
               Criar Primeiro Template
