@@ -1,7 +1,7 @@
 // app/dashboard/layout.tsx
 import { createClient } from '@/lib/supabase-server';
 import { redirect } from 'next/navigation';
-import DashboardNav from '@/components/DashboardNav';
+import { DashboardLayout as Layout } from '@/components/layout/DashboardLayout';
 
 export default async function DashboardLayout({
   children,
@@ -17,24 +17,9 @@ export default async function DashboardLayout({
     redirect('/login');
   }
 
-  // Buscar role do usuário
-  const { data: usuarioData } = await supabase
-    .from('usuarios')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  const userRole = usuarioData?.role as 'agencia' | 'cliente' | undefined;
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
-      <DashboardNav userEmail={user.email} userRole={userRole} />
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {children}
-      </main>
-    </div>
+    <Layout>
+      {children}
+    </Layout>
   );
 }

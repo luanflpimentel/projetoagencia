@@ -1,7 +1,7 @@
 'use client';
 
 // app/dashboard/clientes/[id]/teste-prompt/page.tsx
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Send, Trash2, Bot, User, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -34,16 +34,22 @@ export default function TestePromptPage() {
   const [enviando, setEnviando] = useState(false);
   const [mensagens, setMensagens] = useState<ChatMessage[]>([]);
   const [promptExpanded, setPromptExpanded] = useState(false);
+  const mensagensEndRef = useRef<HTMLDivElement>(null);
+
+  // Scroll automático para última mensagem
+  const scrollToBottom = () => {
+    mensagensEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   // Buscar dados do cliente
   useEffect(() => {
     async function buscarCliente() {
       try {
         console.log('Buscando cliente com ID:', clienteId); // Debug
-        
+
         const response = await fetch(`/api/clientes/${clienteId}`);
         if (!response.ok) throw new Error('Cliente não encontrado');
-        
+
         const data = await response.json();
         setCliente(data);
 
@@ -68,6 +74,11 @@ export default function TestePromptPage() {
       buscarCliente();
     }
   }, [clienteId]);
+
+  // Scroll automático quando mensagens mudarem
+  useEffect(() => {
+    scrollToBottom();
+  }, [mensagens]);
 
   // Enviar mensagem
   async function enviarMensagem() {
@@ -327,6 +338,9 @@ export default function TestePromptPage() {
                     </div>
                   </div>
                 )}
+
+                {/* Elemento para scroll automático */}
+                <div ref={mensagensEndRef} />
               </div>
             </div>
 

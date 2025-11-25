@@ -225,36 +225,41 @@ export default function ClientesPage() {
         </div>
       </div>
 
-      {/* Busca */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar por nome, instância ou escritório..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
-        />
-      </div>
+      {/* 🔒 Busca e Stats - Apenas para agência */}
+      {usuario?.role === 'agencia' && (
+        <>
+          {/* Busca */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome, instância ou escritório..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
 
-      {/* Stats rápidos */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-card border rounded-lg p-4">
-          <div className="text-2xl font-bold">{clientes.length}</div>
-          <div className="text-sm text-muted-foreground">Total de Clientes</div>
-        </div>
-        <div className="bg-card border rounded-lg p-4">
-          <div className="text-2xl font-bold text-green-600">
-            {clientes.filter(c => c.status_conexao === 'conectado').length}
+          {/* Stats rápidos */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-card border rounded-lg p-4">
+              <div className="text-2xl font-bold">{clientes.length}</div>
+              <div className="text-sm text-muted-foreground">Total de Clientes</div>
+            </div>
+            <div className="bg-card border rounded-lg p-4">
+              <div className="text-2xl font-bold text-green-600">
+                {clientes.filter(c => c.status_conexao === 'conectado').length}
+              </div>
+              <div className="text-sm text-muted-foreground">Conectados</div>
+            </div>
+            <div className="bg-card border rounded-lg p-4">
+              <div className="text-2xl font-bold text-red-600">
+                {clientes.filter(c => c.status_conexao === 'desconectado').length}
+              </div>
+              <div className="text-sm text-muted-foreground">Desconectados</div>
+            </div>
           </div>
-          <div className="text-sm text-muted-foreground">Conectados</div>
-        </div>
-        <div className="bg-card border rounded-lg p-4">
-          <div className="text-2xl font-bold text-red-600">
-            {clientes.filter(c => c.status_conexao === 'desconectado').length}
-          </div>
-          <div className="text-sm text-muted-foreground">Desconectados</div>
-        </div>
-      </div>
+        </>
+      )}
 
       {/* Lista de clientes */}
       {filteredClientes.length === 0 ? (
