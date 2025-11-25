@@ -76,14 +76,14 @@ export function DashboardSidebar() {
   const navigationSections = getNavigationSections();
 
   return (
-    <div className={`bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300 ${
+    <div className={`bg-white border-r border-border flex flex-col transition-all duration-300 ${
       isCollapsed ? 'w-16' : 'w-64'
     }`}>
       {/* Header */}
-      <div className="p-4 border-b border-sidebar-border">
+      <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
           {!isCollapsed && (
-            <h2 className="text-lg font-semibold text-sidebar-foreground">
+            <h2 className="text-lg font-semibold text-foreground">
               Agência Talismã
             </h2>
           )}
@@ -91,7 +91,6 @@ export function DashboardSidebar() {
             variant="ghost"
             size="sm"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="hover:bg-sidebar-accent"
           >
             {isCollapsed ? <Menu className="h-4 w-4" /> : <X className="h-4 w-4" />}
           </Button>
@@ -111,7 +110,7 @@ export function DashboardSidebar() {
                   <CollapsibleTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="w-full justify-between px-2 py-1 h-8 text-xs text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                      className="w-full justify-between px-2 py-1 h-8 text-xs text-muted-foreground hover:text-foreground"
                     >
                       {section.title}
                       <div className={`transition-transform ${
@@ -130,11 +129,7 @@ export function DashboardSidebar() {
                         <Button
                           key={item.href}
                           variant={isActive ? "default" : "ghost"}
-                          className={`w-full justify-start px-4 py-2 ${
-                            isActive
-                              ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                              : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-                          }`}
+                          className="w-full justify-start px-4 py-2"
                           asChild
                         >
                           <Link href={item.href}>
@@ -156,11 +151,7 @@ export function DashboardSidebar() {
                   <Button
                     key={item.href}
                     variant={isActive ? "default" : "ghost"}
-                    className={`w-full justify-center px-2 py-2 mb-1 ${
-                      isActive
-                        ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                        : 'hover:bg-sidebar-accent'
-                    }`}
+                    className="w-full justify-center px-2 py-2 mb-1"
                     asChild
                   >
                     <Link href={item.href}>
@@ -175,13 +166,11 @@ export function DashboardSidebar() {
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-sidebar-border">
-        {!isCollapsed && usuario && (
-          <div className="text-sm text-sidebar-foreground space-y-1">
-            <p className="font-medium truncate">{usuario.email}</p>
-            <p className="text-xs text-muted-foreground">
-              {usuario.role === 'agencia' ? 'Agência' : 'Cliente'}
-            </p>
+      <div className="p-4 border-t border-border">
+        {!isCollapsed && (
+          <div className="text-sm text-muted-foreground">
+            <p>Agência Talismã</p>
+            <p>v1.0.0</p>
           </div>
         )}
       </div>

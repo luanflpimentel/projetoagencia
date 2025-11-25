@@ -5,8 +5,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ClienteCard } from '@/components/clientes/cliente-card';
-import { Plus, Search, Loader2 } from 'lucide-react';
+import { Plus, Search, Loader2, Users, CheckCircle, XCircle } from 'lucide-react';
 import type { VwClienteLista } from '@/lib/types';
 import { useAuthWithPermissions } from '@/hooks/useAuthWithPermissions';
 
@@ -136,23 +137,43 @@ export default function ClientesPage() {
           </div>
 
           {/* Stats rápidos */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-card border rounded-lg p-4">
-              <div className="text-2xl font-bold">{clientes.length}</div>
-              <div className="text-sm text-muted-foreground">Total de Clientes</div>
-            </div>
-            <div className="bg-card border rounded-lg p-4">
-              <div className="text-2xl font-bold text-green-600">
-                {clientes.filter(c => c.status_conexao === 'conectado').length}
-              </div>
-              <div className="text-sm text-muted-foreground">Conectados</div>
-            </div>
-            <div className="bg-card border rounded-lg p-4">
-              <div className="text-2xl font-bold text-red-600">
-                {clientes.filter(c => c.status_conexao === 'desconectado').length}
-              </div>
-              <div className="text-sm text-muted-foreground">Desconectados</div>
-            </div>
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total de Clientes</CardTitle>
+                <Users className="h-4 w-4 text-blue-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{clientes.length}</div>
+                <p className="text-xs text-muted-foreground">Clientes cadastrados</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Conectados</CardTitle>
+                <CheckCircle className="h-4 w-4 text-green-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {clientes.filter(c => c.status_conexao === 'conectado').length}
+                </div>
+                <p className="text-xs text-muted-foreground">Ativos no momento</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Desconectados</CardTitle>
+                <XCircle className="h-4 w-4 text-red-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {clientes.filter(c => c.status_conexao === 'desconectado').length}
+                </div>
+                <p className="text-xs text-muted-foreground">Inativos</p>
+              </CardContent>
+            </Card>
           </div>
         </>
       )}
