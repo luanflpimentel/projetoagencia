@@ -43,13 +43,27 @@ export default function ClientesPage() {
   const fetchClientes = async () => {
     try {
       setLoading(true);
+      console.log('🔄 [FRONTEND] Buscando clientes...');
       const response = await fetch('/api/clientes');
-      
+
       if (!response.ok) {
         throw new Error('Erro ao buscar clientes');
       }
 
       const data = await response.json();
+      console.log('📦 [FRONTEND] Clientes recebidos:', {
+        quantidade: data?.length || 0,
+        dados: data
+      });
+
+      // Verificar se é um array
+      if (!Array.isArray(data)) {
+        console.error('❌ [FRONTEND] Resposta não é um array:', data);
+        setClientes([]);
+        setFilteredClientes([]);
+        return;
+      }
+
       setClientes(data);
       setFilteredClientes(data);
 
@@ -57,7 +71,7 @@ export default function ClientesPage() {
       // Executar em background sem bloquear a UI
       syncClientesStatus(data);
     } catch (error) {
-      console.error('Erro:', error);
+      console.error('❌ [FRONTEND] Erro:', error);
     } finally {
       setLoading(false);
     }

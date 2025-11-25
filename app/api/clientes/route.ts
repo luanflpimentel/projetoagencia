@@ -26,12 +26,19 @@ export async function GET() {
       .single();
 
     if (usuarioError) {
-      console.error('Erro ao buscar usuário:', usuarioError);
+      console.error('❌ Erro ao buscar usuário:', usuarioError);
       return NextResponse.json(
         { error: 'Erro ao verificar permissões' },
         { status: 500 }
       );
     }
+
+    console.log('📋 Dados do usuário:', {
+      id: user.id,
+      email: user.email,
+      role: usuario?.role,
+      cliente_id: usuario?.cliente_id
+    });
 
     const isAgencia = await verificarPermissaoAgencia(user.id);
 
@@ -46,6 +53,7 @@ export async function GET() {
         .order('criado_em', { ascending: false });
       data = result.data;
       error = result.error;
+      console.log(`✅ [AGÊNCIA] Retornados ${data?.length || 0} clientes`);
     } else {
       // 🔒 CLIENTE: filtrar pelo cliente_id do usuário
       console.log(`🔒 [CLIENTE] ${user.email} - Filtrando por cliente_id: ${usuario.cliente_id}`);
@@ -55,13 +63,21 @@ export async function GET() {
         return NextResponse.json([]);
       }
 
-      const result = await supabase
+      // Usar supabaseAdmin para bypass RLS e garantir que encontre o cliente
+      const result = await supabaseAdmin
         .from('clientes')
         .select('*')
         .eq('id', usuario.cliente_id)
         .order('criado_em', { ascending: false });
+
       data = result.data;
       error = result.error;
+
+      console.log('🔍 Resultado da query:', {
+        encontrado: data?.length || 0,
+        dados: data,
+        erro: error
+      });
     }
 
     if (error) {
