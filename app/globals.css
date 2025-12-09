@@ -47,44 +47,125 @@
 }
 
 :root {
+  /* === DESIGN SYSTEM BASE === */
+
+  /* Typography */
   --font-size: 14px;
-  --background: #ffffff;
-  --foreground: #030213;
-  --card: #ffffff;
-  --card-foreground: #030213;
-  --popover: #ffffff;
-  --popover-foreground: #030213;
-  --primary: #030213;
-  --primary-foreground: #ffffff;
-  --secondary: #f3f3f5;
-  --secondary-foreground: #030213;
-  --muted: #ececf0;
-  --muted-foreground: #5a5a6b;
-  --accent: #e9ebef;
-  --accent-foreground: #030213;
-  --destructive: #d4183d;
-  --destructive-foreground: #ffffff;
-  --border: #e0e0e5;
-  --input: transparent;
-  --input-background: #f3f3f5;
-  --switch-background: #cbced4;
-  --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: #030213;
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Spacing Scale */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+
+  /* Border Radius */
+  --radius-sm: 0.375rem;  /* 6px */
+  --radius: 0.5rem;       /* 8px */
+  --radius-md: 0.625rem;  /* 10px */
+  --radius-lg: 0.75rem;   /* 12px */
+  --radius-xl: 1rem;      /* 16px */
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+
+  /* === COLOR SYSTEM === */
+
+  /* Base Colors */
+  --background: #ffffff;
+  --foreground: #0F172A;
+  --surface: #F8FAFC;
+
+  /* Card Colors */
+  --card: #ffffff;
+  --card-foreground: #0F172A;
+
+  /* Popover */
+  --popover: #ffffff;
+  --popover-foreground: #0F172A;
+
+  /* Primary (Slate Dark) */
+  --primary: #0F172A;
+  --primary-hover: #1E293B;
+  --primary-foreground: #ffffff;
+
+  /* Secondary */
+  --secondary: #F1F5F9;
+  --secondary-hover: #E2E8F0;
+  --secondary-foreground: #0F172A;
+
+  /* Accent (Blue) */
+  --accent: #3B82F6;
+  --accent-hover: #2563EB;
+  --accent-foreground: #ffffff;
+
+  /* Muted */
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+
+  /* Success (Green) */
+  --success: #10B981;
+  --success-foreground: #ffffff;
+
+  /* Warning (Yellow) */
+  --warning: #F59E0B;
+  --warning-foreground: #ffffff;
+
+  /* Error/Destructive (Red) */
+  --destructive: #EF4444;
+  --destructive-hover: #DC2626;
+  --destructive-foreground: #ffffff;
+
+  /* Info (Blue) */
+  --info: #3B82F6;
+  --info-foreground: #ffffff;
+
+  /* Borders */
+  --border: #E2E8F0;
+  --border-strong: #CBD5E1;
+
+  /* Input */
+  --input: transparent;
+  --input-background: #F8FAFC;
+  --input-border: #E2E8F0;
+
+  /* Ring (Focus) */
+  --ring: #3B82F6;
+
+  /* Switch */
+  --switch-background: #CBD5E1;
+
+  /* Sidebar */
   --sidebar: #ffffff;
-  --sidebar-foreground: #030213;
-  --sidebar-primary: #030213;
+  --sidebar-foreground: #0F172A;
+  --sidebar-primary: #0F172A;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f3f3f5;
-  --sidebar-accent-foreground: #030213;
-  --sidebar-border: #e0e0e5;
-  --sidebar-ring: #030213;
+  --sidebar-accent: #F1F5F9;
+  --sidebar-accent-foreground: #0F172A;
+  --sidebar-border: #E2E8F0;
+  --sidebar-ring: #3B82F6;
+
+  /* Charts */
+  --chart-1: #3B82F6;  /* Blue */
+  --chart-2: #10B981;  /* Green */
+  --chart-3: #F59E0B;  /* Yellow */
+  --chart-4: #EF4444;  /* Red */
+  --chart-5: #8B5CF6;  /* Purple */
 }
 
 .dark {
@@ -138,9 +219,19 @@ html {
 }
 
 
-/* app/globals.css - Adicionar estas animações ao final do arquivo */
+/* === ANIMATIONS & TRANSITIONS === */
 
-/* Animações customizadas */
+/* Fade In */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Slide In From Right */
 @keyframes slide-in-right {
   from {
     opacity: 0;
@@ -152,26 +243,7 @@ html {
   }
 }
 
-@keyframes scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
+/* Slide Down */
 @keyframes slide-down {
   from {
     opacity: 0;
@@ -183,34 +255,41 @@ html {
   }
 }
 
-.animate-slide-in-right {
-  animation: slide-in-right 0.3s ease-out;
+/* Slide Up */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.animate-scale-in {
-  animation: scale-in 0.2s ease-out;
+/* Scale In */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out;
+/* Shimmer (Loading) */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
 }
 
-.animate-slide-down {
-  animation: slide-down 0.2s ease-out;
-}
-
-/* Transições suaves */
-.transition-all {
-  transition: all 0.3s ease;
-}
-
-/* Hover effects */
-.hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-}
-
-/* Loading pulse */
+/* Pulse Slow */
 @keyframes pulse-slow {
   0%, 100% {
     opacity: 1;
@@ -220,6 +299,99 @@ html {
   }
 }
 
+/* Spin */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Animation Classes */
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.2s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.2s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+
 .animate-pulse-slow {
   animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Hover Effects */
+.hover-lift {
+  transition: all 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.hover-scale {
+  transition: transform 0.2s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
+/* Transition Classes */
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+.transition-colors {
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.transition-transform {
+  transition: transform 0.2s ease;
+}
+
+.transition-shadow {
+  transition: box-shadow 0.2s ease;
+}
+
+/* Skeleton Loading */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    var(--secondary) 50%,
+    var(--muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Focus Visible */
+.focus-ring {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }

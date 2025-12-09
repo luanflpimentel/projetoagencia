@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import TemplateCard from '@/components/templates/template-card';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, FileText } from 'lucide-react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import Link from 'next/link';
 import ProtegerRota from '@/components/auth/ProtegerRota';
 
@@ -89,16 +90,23 @@ function TemplatesPageContent() {
 
   if (loading) {
     return (
-      <div>
-        <h1 className="text-2xl font-bold text-foreground mb-6">Templates</h1>
+      <div className="space-y-8 animate-fade-in">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Templates</h1>
+          <p className="text-muted-foreground mt-1">Gerencie os templates de prompts do sistema</p>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-card rounded-lg shadow p-6 animate-pulse border border-border">
-              <div className="h-6 bg-muted rounded w-3/4 mb-4"></div>
-              <div className="h-4 bg-muted rounded w-1/2 mb-4"></div>
-              <div className="h-20 bg-muted rounded mb-4"></div>
-              <div className="h-10 bg-muted rounded"></div>
-            </div>
+            <Card key={i} className="skeleton">
+              <CardHeader>
+                <div className="h-6 bg-muted rounded w-3/4 mb-2"></div>
+                <div className="h-4 bg-muted rounded w-1/2"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-20 bg-muted rounded mb-4"></div>
+                <div className="h-10 bg-muted rounded"></div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>
@@ -106,47 +114,47 @@ function TemplatesPageContent() {
   }
 
   return (
-    <div>
+    <div className="space-y-8 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-foreground">
-          Templates
-        </h1>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Templates</h1>
+          <p className="text-muted-foreground mt-1">Gerencie os templates de prompts do sistema</p>
+        </div>
         <Link
           href="/dashboard/templates/novo"
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+          className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all shadow-sm font-medium"
         >
-          <Plus size={20} />
+          <Plus className="h-5 w-5" />
           Novo Template
         </Link>
       </div>
 
       {/* Search */}
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
-          <input
-            type="text"
-            placeholder="Buscar templates..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-ring bg-card text-foreground"
-          />
-        </div>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+        <input
+          type="text"
+          placeholder="Buscar templates por nome ou área de atuação..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-10 pr-4 py-3 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring bg-card text-foreground shadow-sm transition-all"
+        />
       </div>
 
       {/* Grid de Templates */}
       {filteredTemplates.length === 0 ? (
-        <div className="bg-card rounded-lg shadow p-12 text-center border border-border">
-          <p className="text-muted-foreground mb-4">
-            {searchTerm ? 'Nenhum template encontrado' : 'Nenhum template cadastrado ainda'}
+        <div className="text-center py-16">
+          <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+          <p className="text-muted-foreground mb-6 text-lg">
+            {searchTerm ? 'Nenhum template encontrado com esse termo' : 'Nenhum template cadastrado ainda'}
           </p>
           {!searchTerm && (
             <Link
               href="/dashboard/templates/novo"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all shadow-sm font-medium"
             >
-              <Plus size={20} />
+              <Plus className="h-5 w-5" />
               Criar Primeiro Template
             </Link>
           )}

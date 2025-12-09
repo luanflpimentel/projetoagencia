@@ -5,6 +5,7 @@ import FormEditarUsuario from '@/components/usuarios/FormEditarUsuario';
 import FormNovoUsuario from '@/components/usuarios/FormNovoUsuario';
 import ModalConfirmacao from '@/components/ui/modal-confirmacao';
 import { useToast } from '@/components/ui/toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthWithPermissions } from '@/hooks/useAuthWithPermissions';
@@ -12,6 +13,7 @@ import type { Usuario } from '@/lib/types';
 import { createClient } from '@/lib/supabase-browser';
 import { toggleUsuarioAtivo } from '@/app/actions/usuarios'; // ← NOVA IMPORT
 import ProtegerRota from '@/components/auth/ProtegerRota';
+import { Users, UserCheck, UserX, Shield } from 'lucide-react';
 
 export default function UsuariosPage() {
   return (
@@ -188,10 +190,22 @@ function UsuariosPageContent() {
   
   if (loading && usuarios.length === 0) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Carregando usuários...</p>
+      <div className="space-y-8 animate-fade-in">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Gestão de Usuários</h1>
+          <p className="text-muted-foreground mt-1">Gerencie os usuários do sistema</p>
+        </div>
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-4">
+          {[1, 2, 3, 4].map(i => (
+            <Card key={i} className="skeleton">
+              <CardHeader>
+                <div className="h-4 bg-muted rounded w-1/2 mb-2"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 bg-muted rounded w-1/4"></div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     );
@@ -242,7 +256,7 @@ function UsuariosPageContent() {
         />
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-8 animate-fade-in">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Gestão de Usuários</h1>
@@ -252,7 +266,7 @@ function UsuariosPageContent() {
             <button
               onClick={() => setMostrarFormNovo(true)}
               disabled={processando}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors flex items-center space-x-2 disabled:opacity-50"
+              className="px-4 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all shadow-sm flex items-center gap-2 disabled:opacity-50 font-medium"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -262,29 +276,64 @@ function UsuariosPageContent() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-card rounded-lg shadow p-6 border border-border">
-            <div className="text-3xl font-bold text-foreground">{usuarios.length}</div>
-            <div className="text-sm text-muted-foreground">Total de Usuários</div>
-          </div>
-          <div className="bg-card rounded-lg shadow p-6 border border-border">
-            <div className="text-3xl font-bold text-[#10b981]">
-              {usuarios.filter(u => u.ativo).length}
-            </div>
-            <div className="text-sm text-muted-foreground">Ativos</div>
-          </div>
-          <div className="bg-card rounded-lg shadow p-6 border border-border">
-            <div className="text-3xl font-bold text-destructive">
-              {usuarios.filter(u => !u.ativo).length}
-            </div>
-            <div className="text-sm text-muted-foreground">Inativos</div>
-          </div>
-          <div className="bg-card rounded-lg shadow p-6 border border-border">
-            <div className="text-3xl font-bold text-accent">
-              {usuarios.filter(u => u.role === 'agencia').length}
-            </div>
-            <div className="text-sm text-muted-foreground">Super Admins</div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card className="hover-lift">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total de Usuários</CardTitle>
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <Users className="h-5 w-5 text-blue-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-foreground">{usuarios.length}</div>
+              <p className="text-xs text-muted-foreground mt-2">Usuários cadastrados</p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover-lift border-l-4 border-l-success">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Ativos</CardTitle>
+              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                <UserCheck className="h-5 w-5 text-success" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-foreground">
+                {usuarios.filter(u => u.ativo).length}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">Com acesso ao sistema</p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover-lift border-l-4 border-l-destructive">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Inativos</CardTitle>
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <UserX className="h-5 w-5 text-destructive" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-foreground">
+                {usuarios.filter(u => !u.ativo).length}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">Sem acesso ao sistema</p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover-lift border-l-4 border-l-accent">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Super Admins</CardTitle>
+              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                <Shield className="h-5 w-5 text-accent" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-foreground">
+                {usuarios.filter(u => u.role === 'agencia').length}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">Com permissões completas</p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Campo de Busca */}
@@ -297,32 +346,33 @@ function UsuariosPageContent() {
             placeholder="Buscar por nome, email ou role..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring bg-card text-foreground"
+            className="pl-10 w-full px-4 py-3 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring bg-card text-foreground shadow-sm transition-all"
           />
         </div>
 
-        <div className="bg-card rounded-lg shadow border border-border">
-          <div className="p-6 border-b border-border">
-            <h2 className="text-lg font-semibold text-foreground">
+        <Card>
+          <CardHeader className="border-b border-border">
+            <CardTitle className="text-lg">
               Usuários Cadastrados ({filteredUsuarios.length})
               {searchTerm && (
-                <span className="text-sm text-muted-foreground ml-2">
+                <span className="text-sm text-muted-foreground ml-2 font-normal">
                   • {filteredUsuarios.length} de {usuarios.length} resultados
                 </span>
               )}
-            </h2>
-          </div>
-          <div className="p-6">
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
             {filteredUsuarios.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground mb-4">
+              <div className="text-center py-16">
+                <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+                <p className="text-muted-foreground text-lg">
                   {searchTerm
                     ? 'Nenhum usuário encontrado com esse termo'
                     : 'Nenhum usuário cadastrado ainda'}
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {filteredUsuarios.map(usuario => {
                 const isUsuarioLogado = usuario.id === usuarioLogado?.id;
                 const podeAlterar = permissoes?.pode_editar_usuarios && !isUsuarioLogado;
@@ -330,28 +380,28 @@ function UsuariosPageContent() {
                 return (
                   <div
                     key={usuario.id}
-                    className={`border rounded-lg p-4 transition-all ${
+                    className={`border rounded-lg p-4 transition-all hover-lift ${
                       usuario.ativo
-                        ? 'border-border hover:border-primary/50 bg-card'
-                        : 'border-border bg-muted'
+                        ? 'border-border hover:border-accent/50 bg-card'
+                        : 'border-border bg-muted/50'
                     }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
+                        <div className="flex items-center gap-2 mb-2">
                           <h3 className="text-lg font-semibold text-foreground">
                             {usuario.nome_completo || 'Sem nome'}
                           </h3>
 
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            usuario.ativo ? 'bg-[#10b981]/10 text-[#10b981]' : 'bg-destructive/10 text-destructive'
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                            usuario.ativo ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'
                           }`}>
-                            {usuario.ativo ? '✅ Ativo' : '⏸️ Inativo'}
+                            {usuario.ativo ? 'Ativo' : 'Inativo'}
                           </span>
 
                           {isUsuarioLogado && (
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-accent/10 text-accent">
-                              ⭐ Você
+                            <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-accent/10 text-accent">
+                              Você
                             </span>
                           )}
                         </div>
@@ -359,14 +409,14 @@ function UsuariosPageContent() {
                         <p className="text-sm text-muted-foreground">{usuario.email}</p>
                       </div>
 
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-2">
                         {permissoes?.pode_editar_usuarios && (
                           <button
                             onClick={() => setUsuarioParaEditar(usuario)}
                             disabled={processando}
-                            className="px-3 py-1.5 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 text-sm font-medium disabled:opacity-50"
+                            className="px-4 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 text-sm font-medium transition-all disabled:opacity-50"
                           >
-                            ✏️ Editar
+                            Editar
                           </button>
                         )}
 
@@ -374,13 +424,13 @@ function UsuariosPageContent() {
                           <button
                             onClick={() => abrirModalToggleAtivo(usuario, !usuario.ativo)}
                             disabled={processando}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 ${
                               usuario.ativo
-                                ? 'bg-accent/10 text-accent hover:bg-accent/20'
-                                : 'bg-[#10b981]/10 text-[#10b981] hover:bg-[#10b981]/20'
+                                ? 'bg-warning/10 text-warning hover:bg-warning/20'
+                                : 'bg-success/10 text-success hover:bg-success/20'
                             }`}
                           >
-                            {usuario.ativo ? '⏸️ Desativar' : '✅ Ativar'}
+                            {usuario.ativo ? 'Desativar' : 'Ativar'}
                           </button>
                         )}
                       </div>
@@ -390,8 +440,8 @@ function UsuariosPageContent() {
               })}
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {mostrarFormNovo && (
           <FormNovoUsuario

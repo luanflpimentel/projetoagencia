@@ -4,6 +4,7 @@
 import React, { useState, useCallback } from 'react';
 import { Wifi, WifiOff, Settings, Loader2 } from 'lucide-react';
 import { QRCodeModal } from './qrcode-modal';
+import { useToast } from '@/components/ui/toast';
 import type { StatusConexao } from '@/lib/types';
 
 interface ConnectionActionsProps {
@@ -19,56 +20,40 @@ export function ConnectionActions({
   isConnected,
   onStatusChange,
 }: ConnectionActionsProps) {
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  console.log('🔌 [ACTIONS] Renderizando com:', {
-    instanceName,
-    statusConexao,
-    isConnected,
-  });
+  const toast = useToast();
 
   // Handler para conectar COM VERIFICAÇÃO
   const handleConnect = useCallback(async () => {
-    console.log('🔌 [ACTIONS] handleConnect chamado');
-    console.log('🔌 [ACTIONS] isConnected:', isConnected);
-    console.log('🔌 [ACTIONS] statusConexao:', statusConexao);
-
     // ⚠️ VERIFICAÇÃO CRÍTICA 1: Já conectado?
     if (isConnected || statusConexao === 'conectado') {
-      console.warn('⚠️ [ACTIONS] WhatsApp JÁ ESTÁ CONECTADO!');
-      alert('⚠️ WhatsApp já está conectado!\n\nUse o botão "Desconectar" primeiro.');
+      toast.warning('WhatsApp já está conectado! Use o botão "Desconectar" primeiro.');
       return;
     }
 
     // ⚠️ VERIFICAÇÃO CRÍTICA 2: Conectando?
     if (statusConexao === 'connecting') {
-      console.warn('⚠️ [ACTIONS] Conexão já em andamento!');
-      alert('⏳ Já existe uma conexão em andamento.\n\nAguarde a conclusão...');
+      toast.info('Já existe uma conexão em andamento. Aguarde a conclusão...');
       return;
     }
 
-    console.log('✅ [ACTIONS] Validações passaram. Abrindo modal...');
     setIsModalOpen(true);
-  }, [isConnected, statusConexao]);
+  }, [isConnected, statusConexao, toast]);
 
   // Handler para desconectar
   const handleDisconnect = useCallback(async () => {
-    console.log('🔌 [ACTIONS] handleDisconnect chamado');
-
     const confirmDisconnect = window.confirm(
       'Deseja realmente desconectar o WhatsApp?\n\n' +
       'A instância será desconectada e você precisará escanear um novo QR Code para reconectar.'
     );
 
     if (!confirmDisconnect) {
-      console.log('❌ [ACTIONS] Desconexão cancelada pelo usuário');
       return;
     }
 
     setIsLoading(true);
-    console.log('🔌 [ACTIONS] Iniciando desconexão...');
 
     try {
       const response = await fetch(
@@ -81,28 +66,24 @@ export function ConnectionActions({
         throw new Error(error.error || 'Erro ao desconectar');
       }
 
-      const data = await response.json();
-      console.log('✅ [ACTIONS] Desconectado com sucesso:', data);
-
       // Atualizar lista
       if (onStatusChange) {
         onStatusChange();
       }
 
-      alert('✅ WhatsApp desconectado com sucesso!');
+      toast.success('WhatsApp desconectado com sucesso!');
     } catch (error: any) {
-      console.error('❌ [ACTIONS] Erro ao desconectar:', error);
-      alert(`❌ Erro ao desconectar:\n\n${error.message}`);
+      console.error('Erro ao desconectar:', error);
+      toast.error(`Erro ao desconectar: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
-  }, [instanceName, onStatusChange]);
+  }, [instanceName, onStatusChange, toast]);
 
   // Callback quando conectar
   const handleConnected = useCallback(() => {
-    console.log('🎉 [ACTIONS] Conexão estabelecida!');
     setIsModalOpen(false);
-    
+
     // Atualizar lista
     if (onStatusChange) {
       onStatusChange();
@@ -113,12 +94,6 @@ export function ConnectionActions({
   const shouldShowDisconnect = isConnected || statusConexao === 'conectado';
   const shouldShowConnect = !shouldShowDisconnect && statusConexao !== 'connecting';
   const isConnecting = statusConexao === 'connecting';
-
-  console.log('🎯 [ACTIONS] Decisão de botão:', {
-    shouldShowDisconnect,
-    shouldShowConnect,
-    isConnecting,
-  });
 
   return (
     <>
@@ -175,8 +150,7 @@ export function ConnectionActions({
         <button
           className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
           onClick={() => {
-            console.log('⚙️ [ACTIONS] Configurar clicado');
-            alert('⚙️ Configurações em breve!');
+            toast.info('Configurações em breve!');
           }}
           title="Configurar instância"
         >
@@ -189,10 +163,7 @@ export function ConnectionActions({
       {isModalOpen && (
         <QRCodeModal
           isOpen={isModalOpen}
-          onClose={() => {
-            console.log('🚪 [ACTIONS] Fechando modal');
-            setIsModalOpen(false);
-          }}
+          onClose={() => setIsModalOpen(false)}
           instanceName={instanceName}
           onConnected={handleConnected}
         />

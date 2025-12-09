@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useAuthWithPermissions } from '@/hooks/useAuthWithPermissions';
+import { cn } from '@/lib/utils';
 
 export function DashboardSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -76,24 +77,37 @@ export function DashboardSidebar() {
   const navigationSections = getNavigationSections();
 
   return (
-    <div className={`bg-white border-r border-border flex flex-col transition-all duration-300 ${
+    <div className={`bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300 shadow-sm ${
       isCollapsed ? 'w-16' : 'w-64'
     }`}>
       {/* Header */}
-      <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center justify-between">
           {!isCollapsed && (
-            <h2 className="text-lg font-semibold text-foreground">
-              Agência Talismã
-            </h2>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-sm">AT</span>
+              </div>
+              <h2 className="text-base font-semibold text-sidebar-foreground">
+                Agência Talismã
+              </h2>
+            </div>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsCollapsed(!isCollapsed)}
-          >
-            {isCollapsed ? <Menu className="h-4 w-4" /> : <X className="h-4 w-4" />}
-          </Button>
+          {isCollapsed && (
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center mx-auto">
+              <span className="text-primary-foreground font-bold text-xs">AT</span>
+            </div>
+          )}
+          {!isCollapsed && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="h-7 w-7"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -110,17 +124,17 @@ export function DashboardSidebar() {
                   <CollapsibleTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="w-full justify-between px-2 py-1 h-8 text-xs text-muted-foreground hover:text-foreground"
+                      className="w-full justify-between px-3 py-1.5 h-7 text-xs font-medium text-muted-foreground hover:text-foreground uppercase tracking-wider"
                     >
                       {section.title}
-                      <div className={`transition-transform ${
+                      <div className={`transition-transform duration-200 ${
                         openSections.includes(section.key) ? 'rotate-90' : ''
                       }`}>
                         ▶
                       </div>
                     </Button>
                   </CollapsibleTrigger>
-                  <CollapsibleContent className="space-y-1">
+                  <CollapsibleContent className="space-y-0.5 mt-1">
                     {section.items.map((item) => {
                       const IconComponent = item.icon;
                       const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
@@ -129,11 +143,14 @@ export function DashboardSidebar() {
                         <Button
                           key={item.href}
                           variant={isActive ? "default" : "ghost"}
-                          className="w-full justify-start px-4 py-2"
+                          className={cn(
+                            "w-full justify-start px-3 py-2 h-9 text-sm font-medium transition-all",
+                            isActive && "bg-primary text-primary-foreground shadow-sm border-l-4 border-l-accent"
+                          )}
                           asChild
                         >
                           <Link href={item.href}>
-                            <IconComponent className="h-4 w-4 mr-2" />
+                            <IconComponent className="h-4 w-4 mr-3" />
                             {item.name}
                           </Link>
                         </Button>
@@ -166,12 +183,27 @@ export function DashboardSidebar() {
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-sidebar-border mt-auto">
         {!isCollapsed && (
-          <div className="text-sm text-muted-foreground">
-            <p>Agência Talismã</p>
-            <p>v1.0.0</p>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Versão</span>
+              <span className="font-medium text-foreground">1.0.0</span>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              © 2024 Agência Talismã
+            </div>
           </div>
+        )}
+        {isCollapsed && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setIsCollapsed(false)}
+            className="w-full"
+          >
+            <Menu className="h-4 w-4" />
+          </Button>
         )}
       </div>
     </div>

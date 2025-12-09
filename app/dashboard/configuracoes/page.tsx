@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/components/ui/toast';
 import { Spinner } from '@/components/ui/loading';
+import { Card } from '@/components/ui/card';
+import { Download, Users, FileText, Activity, Database, Info } from 'lucide-react';
 
 export default function ConfiguracoesPage() {
   const [exporting, setExporting] = useState(false);
@@ -200,103 +202,124 @@ export default function ConfiguracoesPage() {
     {
       title: 'Exportar Clientes',
       description: 'Baixar lista completa de clientes em CSV',
-      icon: '👥',
+      icon: Users,
       action: exportClientes,
-      color: 'blue',
+      bgColor: 'bg-blue-100',
+      iconColor: 'text-blue-600',
+      buttonColor: 'bg-blue-600 hover:bg-blue-700',
     },
     {
       title: 'Exportar Templates',
       description: 'Baixar templates de prompts em CSV',
-      icon: '📄',
+      icon: FileText,
       action: exportTemplates,
-      color: 'purple',
+      bgColor: 'bg-purple-100',
+      iconColor: 'text-purple-600',
+      buttonColor: 'bg-purple-600 hover:bg-purple-700',
     },
     {
       title: 'Exportar Logs',
       description: 'Baixar últimos 1000 logs do sistema',
-      icon: '📋',
+      icon: Activity,
       action: exportLogs,
-      color: 'green',
+      bgColor: 'bg-green-100',
+      iconColor: 'text-green-600',
+      buttonColor: 'bg-green-600 hover:bg-green-700',
     },
     {
       title: 'Backup Completo',
       description: 'Backup de todos os dados em JSON',
-      icon: '💾',
+      icon: Database,
       action: backupCompleto,
-      color: 'red',
+      bgColor: 'bg-red-100',
+      iconColor: 'text-red-600',
+      buttonColor: 'bg-red-600 hover:bg-red-700',
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Configurações e Backup</h1>
-        <p className="text-gray-600 mt-1">Exportar e fazer backup dos seus dados</p>
+        <h1 className="text-3xl font-bold text-foreground">Configurações e Backup</h1>
+        <p className="text-muted-foreground mt-1">Exportar e fazer backup dos seus dados</p>
       </div>
 
       {/* Cards de Export */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {cards.map((card) => (
-          <div key={card.title} className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-start gap-4">
-              <div className={`text-4xl`}>
-                {card.icon}
+        {cards.map((card) => {
+          const IconComponent = card.icon;
+          return (
+            <Card key={card.title} className="p-6 hover-lift transition-all">
+              <div className="flex items-start gap-4">
+                <div className={`w-12 h-12 rounded-lg ${card.bgColor} flex items-center justify-center flex-shrink-0`}>
+                  <IconComponent className={`h-6 w-6 ${card.iconColor}`} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
+                    {card.title}
+                  </h3>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    {card.description}
+                  </p>
+                  <button
+                    onClick={card.action}
+                    disabled={exporting}
+                    className={`
+                      px-4 py-2 rounded-lg font-medium text-white shadow-sm
+                      ${card.buttonColor}
+                      disabled:opacity-50 disabled:cursor-not-allowed
+                      transition-all flex items-center gap-2
+                    `}
+                  >
+                    {exporting ? (
+                      <>
+                        <Spinner size="sm" />
+                        Exportando...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-4 w-4" />
+                        Exportar
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {card.title}
-                </h3>
-                <p className="text-gray-600 text-sm mb-4">
-                  {card.description}
-                </p>
-                <button
-                  onClick={card.action}
-                  disabled={exporting}
-                  className={`
-                    px-4 py-2 rounded-lg font-medium text-white
-                    bg-${card.color}-600 hover:bg-${card.color}-700
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                    transition-colors flex items-center gap-2
-                  `}
-                >
-                  {exporting ? (
-                    <>
-                      <Spinner size="sm" />
-                      Exportando...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      Exportar
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+            </Card>
+          );
+        })}
       </div>
 
       {/* Informações */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+      <Card className="p-6 bg-info/5 border-info/20">
         <div className="flex items-start gap-3">
-          <svg className="w-6 h-6 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div>
-            <h4 className="font-medium text-blue-900 mb-2">Sobre os backups</h4>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Arquivos CSV podem ser abertos no Excel ou Google Sheets</li>
-              <li>• Backup JSON contém todos os dados em formato estruturado</li>
-              <li>• Recomendamos fazer backups semanalmente</li>
-              <li>• Os arquivos são gerados e baixados diretamente no seu computador</li>
+          <div className="w-10 h-10 rounded-full bg-info/10 flex items-center justify-center flex-shrink-0">
+            <Info className="h-5 w-5 text-info" />
+          </div>
+          <div className="flex-1">
+            <h4 className="font-semibold text-foreground mb-3">Sobre os backups</h4>
+            <ul className="text-sm text-muted-foreground space-y-2">
+              <li className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-info mt-1.5 flex-shrink-0"></span>
+                <span>Arquivos CSV podem ser abertos no Excel ou Google Sheets</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-info mt-1.5 flex-shrink-0"></span>
+                <span>Backup JSON contém todos os dados em formato estruturado</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-info mt-1.5 flex-shrink-0"></span>
+                <span>Recomendamos fazer backups semanalmente</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-info mt-1.5 flex-shrink-0"></span>
+                <span>Os arquivos são gerados e baixados diretamente no seu computador</span>
+              </li>
             </ul>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
