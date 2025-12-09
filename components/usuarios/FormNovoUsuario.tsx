@@ -3,6 +3,8 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-browser';
+import { useToast } from '@/components/ui/toast';
+import { Eye, EyeOff, RefreshCw, Copy, X, AlertCircle } from 'lucide-react';
 import type { UserRole } from '@/lib/types';
 
 interface FormNovoUsuarioProps {
@@ -16,8 +18,8 @@ interface Cliente {
 }
 
 const ROLE_LABELS = {
-  agencia: '🏢 Agência',
-  cliente: '👤 Cliente',
+  agencia: 'Agência',
+  cliente: 'Cliente',
 };
 
 const ROLE_DESCRIPTIONS = {
@@ -39,6 +41,7 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
   const [loadingClientes, setLoadingClientes] = useState(true);
   const [error, setError] = useState('');
   const [mostrarSenha, setMostrarSenha] = useState(false);
+  const toast = useToast();
 
   const supabase = createClient();
 
@@ -54,7 +57,7 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
         .select('id, nome_cliente')
         .eq('ativo', true)
         .order('nome_cliente');
-      
+
       if (error) throw error;
       setClientes(data || []);
     } catch (err) {
@@ -74,17 +77,14 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
   }
 
   function validarFormulario(): string | null {
-    // Validar email
     if (!formData.email || !formData.email.includes('@')) {
       return 'Email inválido';
     }
 
-    // Validar nome
     if (!formData.nome_completo || formData.nome_completo.length < 3) {
       return 'Nome deve ter pelo menos 3 caracteres';
     }
 
-    // Validar cliente_id (obrigatório para cliente, proibido para agencia)
     if (formData.role === 'cliente' && !formData.cliente_id) {
       return 'Cliente deve estar associado a um cliente WhatsApp';
     }
@@ -93,7 +93,6 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
       return 'Agência não pode ter cliente associado';
     }
 
-    // Validar senha
     if (formData.senha.length < 8) {
       return 'Senha deve ter pelo menos 8 caracteres';
     }
@@ -103,7 +102,7 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    
+
     const erroValidacao = validarFormulario();
     if (erroValidacao) {
       setError(erroValidacao);
@@ -114,7 +113,6 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
     setError('');
 
     try {
-      // Chamar API backend para criar usuário (NÃO faz login automático)
       const response = await fetch('/api/usuarios', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -133,69 +131,64 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
         throw new Error(errorData.error || 'Erro ao criar usuário');
       }
 
-      const { data } = await response.json();
+      // Copiar senha automaticamente
+      await navigator.clipboard.writeText(formData.senha);
 
-      console.log('✅ Usuário criado com sucesso:', data);
-
-      // Sucesso! Mostrar senha gerada
-      alert(
-        `✅ Usuário criado com sucesso!\n\n` +
-        `📧 Email: ${formData.email}\n` +
-        `🔑 Senha temporária: ${formData.senha}\n\n` +
-        `⚠️ IMPORTANTE: Anote esta senha e envie para o usuário!`
+      toast.success(
+        `Usuário criado com sucesso! Senha copiada: ${formData.senha}`
       );
-      
+
       onSuccess();
 
     } catch (err: any) {
       console.error('Erro ao criar usuário:', err);
       setError(err.message || 'Erro ao criar usuário');
+      toast.error(err.message || 'Erro ao criar usuário');
     } finally {
       setLoading(false);
     }
   }
 
-  function copiarSenha() {
-    navigator.clipboard.writeText(formData.senha);
-    alert('Senha copiada para a área de transferência!');
+  async function copiarSenha() {
+    await navigator.clipboard.writeText(formData.senha);
+    toast.success('Senha copiada para a área de transferência!');
   }
 
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+      <div className="bg-card rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-border">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
-          <h2 className="text-xl font-semibold text-gray-900">Novo Usuário</h2>
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between sticky top-0 bg-card">
+          <h2 className="text-xl font-semibold text-foreground">Novo Usuário</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-muted-foreground hover:text-foreground transition-colors p-1 hover:bg-muted rounded-lg"
             disabled={loading}
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700">
-              ⚠️ {error}
+            <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-destructive">{error}</p>
             </div>
           )}
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Email <span className="text-destructive">*</span>
             </label>
             <input
               type="email"
               required
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-input rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground transition-all"
               placeholder="usuario@exemplo.com"
               disabled={loading}
             />
@@ -203,30 +196,30 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
 
           {/* Nome Completo */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nome Completo <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Nome Completo <span className="text-destructive">*</span>
             </label>
             <input
               type="text"
               required
               value={formData.nome_completo}
               onChange={(e) => setFormData({ ...formData, nome_completo: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-input rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground transition-all"
               placeholder="João Silva"
               disabled={loading}
             />
           </div>
 
-          {/* Telefone (opcional) */}
+          {/* Telefone */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Telefone
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Telefone <span className="text-muted-foreground text-xs">(opcional)</span>
             </label>
             <input
               type="tel"
               value={formData.telefone}
               onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-input rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground transition-all"
               placeholder="(00) 00000-0000"
               disabled={loading}
             />
@@ -234,20 +227,20 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
 
           {/* Role */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tipo de Usuário <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Tipo de Usuário <span className="text-destructive">*</span>
             </label>
             <select
               required
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole, cliente_id: '' })}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-input rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground transition-all"
               disabled={loading}
             >
               <option value="cliente">{ROLE_LABELS.cliente}</option>
               <option value="agencia">{ROLE_LABELS.agencia}</option>
             </select>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1.5">
               {ROLE_DESCRIPTIONS[formData.role]}
             </p>
           </div>
@@ -255,17 +248,17 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
           {/* Cliente (apenas se role for cliente) */}
           {formData.role === 'cliente' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Cliente <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Cliente <span className="text-destructive">*</span>
               </label>
               {loadingClientes ? (
-                <div className="text-sm text-gray-500">Carregando clientes...</div>
+                <div className="text-sm text-muted-foreground">Carregando clientes...</div>
               ) : (
                 <select
                   required
                   value={formData.cliente_id}
                   onChange={(e) => setFormData({ ...formData, cliente_id: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-input rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground transition-all"
                   disabled={loading}
                 >
                   <option value="">Selecione um cliente...</option>
@@ -277,8 +270,9 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
                 </select>
               )}
               {clientes.length === 0 && !loadingClientes && (
-                <p className="text-xs text-red-500 mt-1">
-                  ⚠️ Nenhum cliente ativo encontrado
+                <p className="text-xs text-destructive mt-1.5 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  Nenhum cliente ativo encontrado
                 </p>
               )}
             </div>
@@ -286,74 +280,72 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
 
           {/* Senha Temporária */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Senha Temporária
             </label>
-            <div className="flex items-center space-x-2">
-              <input
-                type={mostrarSenha ? "text" : "password"}
-                value={formData.senha}
-                onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
-                className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-                placeholder="Digite ou gere uma senha"
-                disabled={loading}
-                minLength={8}
-              />
-              <button
-                type="button"
-                onClick={() => setMostrarSenha(!mostrarSenha)}
-                className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                title={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
-                disabled={loading}
-              >
-                {mostrarSenha ? '🙈' : '👁️'}
-              </button>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <input
+                  type={mostrarSenha ? "text" : "password"}
+                  value={formData.senha}
+                  onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+                  className="w-full border border-input rounded-lg px-4 py-2.5 pr-12 focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground font-mono text-sm transition-all"
+                  placeholder="Digite ou gere uma senha"
+                  disabled={loading}
+                  minLength={8}
+                />
+                <button
+                  type="button"
+                  onClick={() => setMostrarSenha(!mostrarSenha)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  title={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                  disabled={loading}
+                >
+                  {mostrarSenha ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, senha: gerarSenha() })}
-                className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                className="px-3 py-2.5 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors border border-input"
                 title="Gerar nova senha"
                 disabled={loading}
               >
-                🔄
+                <RefreshCw className="w-4 h-4" />
               </button>
               <button
                 type="button"
                 onClick={copiarSenha}
-                className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                className="px-3 py-2.5 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors border border-primary/20"
                 title="Copiar senha"
                 disabled={loading}
               >
-                📋
+                <Copy className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              ⚠️ Anote esta senha e envie para o usuário. Ele deverá alterá-la no primeiro acesso.
+            <p className="text-xs text-muted-foreground mt-1.5 flex items-start gap-1.5">
+              <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+              <span>Anote esta senha e envie para o usuário. Ele deverá alterá-la no primeiro acesso.</span>
             </p>
           </div>
 
           {/* Buttons */}
-          <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-6 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+              className="px-6 py-2.5 text-foreground hover:bg-muted rounded-lg transition-colors disabled:opacity-50 font-medium"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading || (formData.role === 'cliente' && clientes.length === 0)}
-              className={`
-                px-6 py-2 bg-blue-600 text-white rounded-lg transition-colors
-                ${loading || (formData.role === 'cliente' && clientes.length === 0)
-                  ? 'opacity-50 cursor-not-allowed' 
-                  : 'hover:bg-blue-700'}
-              `}
+              className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm font-medium"
             >
               {loading ? (
-                <span className="flex items-center space-x-2">
+                <span className="flex items-center gap-2">
                   <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -361,7 +353,7 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
                   <span>Criando...</span>
                 </span>
               ) : (
-                '✓ Criar Usuário'
+                'Criar Usuário'
               )}
             </button>
           </div>

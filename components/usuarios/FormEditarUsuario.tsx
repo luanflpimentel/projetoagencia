@@ -1,8 +1,11 @@
+// components/usuarios/FormEditarUsuario.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-browser';
+import { useToast } from '@/components/ui/toast';
 import { Usuario, UserRole } from '@/lib/types';
+import { X, AlertCircle } from 'lucide-react';
 
 interface Props {
   usuario: Usuario;
@@ -17,7 +20,8 @@ interface Cliente {
 
 export default function FormEditarUsuario({ usuario, onClose, onSuccess }: Props) {
   const supabase = createClient();
-  
+  const toast = useToast();
+
   const [formData, setFormData] = useState({
     nome_completo: usuario.nome_completo || '',
     telefone: usuario.telefone || '',
@@ -37,7 +41,7 @@ export default function FormEditarUsuario({ usuario, onClose, onSuccess }: Props
         .select('id, nome_cliente')
         .eq('ativo', true)
         .order('nome_cliente');
-      
+
       if (data) setClientes(data);
     }
     loadClientes();
@@ -103,59 +107,55 @@ export default function FormEditarUsuario({ usuario, onClose, onSuccess }: Props
         },
       });
 
+      toast.success('Usuário atualizado com sucesso!');
       onSuccess();
     } catch (err: any) {
       console.error('Erro ao editar usuário:', err);
       setError(err.message || 'Erro ao editar usuário');
+      toast.error(err.message || 'Erro ao editar usuário');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-30 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
-        
-        {/* Header com gradiente */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                ✏️ Editar Usuário
-              </h2>
-              <p className="text-blue-100 mt-1">
-                Atualize as informações de <span className="font-semibold">{usuario.email}</span>
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-white/80 hover:text-white hover:bg-white/10 rounded-lg p-2 transition-all"
-              disabled={loading}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+      <div className="bg-card rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-border">
+
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between sticky top-0 bg-card">
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">
+              Editar Usuário
+            </h2>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Atualize as informações de <span className="font-medium">{usuario.email}</span>
+            </p>
           </div>
+          <button
+            onClick={onClose}
+            className="text-muted-foreground hover:text-foreground transition-colors p-1 hover:bg-muted rounded-lg"
+            disabled={loading}
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-8">
+        <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-6">
-            
+
             {/* Erro */}
             {error && (
-              <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-lg flex items-start gap-3 animate-in slide-in-from-top-2 duration-200">
-                <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-                <span>{error}</span>
+              <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                <span className="text-sm text-destructive">{error}</span>
               </div>
             )}
 
             {/* Email (não editável) */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Email
               </label>
               <div className="relative">
@@ -163,26 +163,26 @@ export default function FormEditarUsuario({ usuario, onClose, onSuccess }: Props
                   type="email"
                   value={usuario.email}
                   disabled
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed"
+                  className="w-full px-4 py-2.5 border border-input rounded-lg bg-muted text-muted-foreground cursor-not-allowed"
                 />
-                <span className="absolute right-3 top-3 text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground bg-background px-2 py-0.5 rounded border border-border">
                   não editável
                 </span>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
+
               {/* Nome Completo */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Nome Completo <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Nome Completo <span className="text-destructive">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.nome_completo}
                   onChange={(e) => setFormData({ ...formData, nome_completo: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  className="w-full px-4 py-2.5 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground transition-all"
                   placeholder="Ex: João Silva"
                   required
                 />
@@ -190,44 +190,44 @@ export default function FormEditarUsuario({ usuario, onClose, onSuccess }: Props
 
               {/* Telefone */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Telefone <span className="text-gray-400 text-xs">(opcional)</span>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Telefone <span className="text-muted-foreground text-xs">(opcional)</span>
                 </label>
                 <input
                   type="tel"
                   value={formData.telefone}
                   onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  className="w-full px-4 py-2.5 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground transition-all"
                   placeholder="(11) 98765-4321"
                 />
               </div>
 
               {/* Role */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Tipo de Usuário <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Tipo de Usuário <span className="text-destructive">*</span>
                 </label>
                 <select
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                  className="w-full px-4 py-2.5 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground transition-all"
                   required
                 >
-                  <option value="agencia">🏢 Agência (acesso completo)</option>
-                  <option value="cliente">👤 Cliente (apenas seu WhatsApp)</option>
+                  <option value="agencia">Agência (acesso completo)</option>
+                  <option value="cliente">Cliente (apenas seu WhatsApp)</option>
                 </select>
               </div>
 
               {/* Cliente */}
               {formData.role === 'cliente' && (
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Cliente <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Cliente <span className="text-destructive">*</span>
                   </label>
                   <select
                     value={formData.cliente_id}
                     onChange={(e) => setFormData({ ...formData, cliente_id: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                    className="w-full px-4 py-2.5 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground transition-all"
                     required
                   >
                     <option value="">Selecione um cliente</option>
@@ -243,18 +243,18 @@ export default function FormEditarUsuario({ usuario, onClose, onSuccess }: Props
           </div>
 
           {/* Botões */}
-          <div className="flex gap-4 mt-8 pt-6 border-t border-gray-200">
+          <div className="flex gap-3 mt-8 pt-6 border-t border-border">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-semibold"
+              className="flex-1 px-6 py-2.5 border border-input text-foreground rounded-lg hover:bg-muted transition-all font-medium"
               disabled={loading}
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all font-semibold shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
             >
               {loading ? (
@@ -266,7 +266,7 @@ export default function FormEditarUsuario({ usuario, onClose, onSuccess }: Props
                   Salvando...
                 </span>
               ) : (
-                '💾 Salvar Alterações'
+                'Salvar Alterações'
               )}
             </button>
           </div>
