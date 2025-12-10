@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ClienteCard } from '@/components/clientes/cliente-card';
 import { Plus, Search, Loader2, Users, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import type { VwClienteLista } from '@/lib/types';
-import { useAuthWithPermissions } from '@/hooks/useAuthWithPermissions';
+import { useAuth } from '@/providers/AuthProvider';
 import { useToast } from '@/components/ui/toast';
 import ProtegerRota from '@/components/auth/ProtegerRota';
 
@@ -23,7 +23,7 @@ export default function ClientesPage() {
 
 function ClientesPageContent() {
   const router = useRouter();
-  const { usuario } = useAuthWithPermissions();
+  const { usuario } = useAuth();
   const toast = useToast();
 
   const [clientes, setClientes] = useState<VwClienteLista[]>([]);

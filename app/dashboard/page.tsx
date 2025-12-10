@@ -74,35 +74,25 @@ function DashboardPageContent() {
       const clientesConectados = clientes?.filter(c => c.status_conexao === 'conectado').length || 0;
       const clientesDesconectados = totalClientes - clientesConectados;
 
-      // ✅ CORRIGIDO: Especificar relacionamento explícito
+      // Buscar logs sem join (para evitar erro de múltiplos relacionamentos)
       const { data: logs, error: logsError } = await supabase
         .from('logs_sistema')
-        .select(`
-          *,
-          clientes!cliente_id(*)
-        `)
+        .select('*')
         .order('criado_em', { ascending: false })
         .limit(5);
 
       if (logsError) throw logsError;
 
-      // Processar logs com tratamento robusto de tipos
+      // Criar map de clientes para lookup rápido
+      const clientesMap = new Map(
+        clientes?.map(c => [c.id, c.nome_cliente]) || []
+      );
+
+      // Processar logs e buscar nome do cliente do map
       const ultimasAtividades = (logs || []).map(log => {
-        // Extrair nome do cliente de forma type-safe
-        let clienteNome = 'Sistema';
-        
-        if (log.clientes) {
-          // Se for array, pega o primeiro item
-          if (Array.isArray(log.clientes) && log.clientes.length > 0) {
-            const primeiroCliente = log.clientes[0] as { nome_cliente?: string };
-            clienteNome = primeiroCliente.nome_cliente || 'Sistema';
-          } 
-          // Se for objeto único
-          else if (!Array.isArray(log.clientes) && typeof log.clientes === 'object') {
-            const clienteObj = log.clientes as { nome_cliente?: string };
-            clienteNome = clienteObj.nome_cliente || 'Sistema';
-          }
-        }
+        const clienteNome = log.cliente_id
+          ? clientesMap.get(log.cliente_id) || 'Cliente Desconhecido'
+          : 'Sistema';
 
         return {
           id: log.id as string,

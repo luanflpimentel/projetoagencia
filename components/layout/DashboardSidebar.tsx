@@ -15,14 +15,14 @@ import {
   Activity
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useAuthWithPermissions } from '@/hooks/useAuthWithPermissions';
+import { useAuth } from '@/providers/AuthProvider';
 import { cn } from '@/lib/utils';
 
 export function DashboardSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [openSections, setOpenSections] = useState<string[]>(['main']);
   const pathname = usePathname();
-  const { usuario } = useAuthWithPermissions();
+  const { usuario } = useAuth();
 
   const toggleSection = (section: string) => {
     setOpenSections(prev =>

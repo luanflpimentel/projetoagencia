@@ -7,7 +7,7 @@ import ModalConfirmacao from '@/components/ui/modal-confirmacao';
 import { useToast } from '@/components/ui/toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
-import { useAuthWithPermissions } from '@/hooks/useAuthWithPermissions';
+import { useAuth } from '@/providers/AuthProvider';
 import type { Usuario } from '@/lib/types';
 import { toggleUsuarioAtivo } from '@/app/actions/usuarios'; // ← NOVA IMPORT
 import ProtegerRota from '@/components/auth/ProtegerRota';
@@ -43,7 +43,7 @@ function UsuariosPageContent() {
   });
   
   const { success, error: errorToast, warning } = useToast();
-  const { permissoes, usuario: usuarioAuth } = useAuthWithPermissions();
+  const { permissoes, usuario: usuarioAuth } = useAuth();
 
   // Definir usuário logado quando o auth carregar
   useEffect(() => {

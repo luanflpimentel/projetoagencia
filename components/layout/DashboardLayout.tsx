@@ -2,6 +2,7 @@
 
 import { DashboardSidebar } from './DashboardSidebar';
 import { DashboardHeader } from './DashboardHeader';
+import { AuthProvider } from '@/providers/AuthProvider';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -9,18 +10,20 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
-    <div className="flex h-screen bg-surface">
-      <DashboardSidebar />
+    <AuthProvider>
+      <div className="flex h-screen bg-surface">
+        <DashboardSidebar />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <DashboardHeader />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <DashboardHeader />
 
-        <main className="flex-1 overflow-y-auto p-8 bg-surface">
-          <div className="max-w-7xl mx-auto">
-            {children}
-          </div>
-        </main>
+          <main className="flex-1 overflow-y-auto p-8 bg-surface">
+            <div className="max-w-7xl mx-auto">
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </AuthProvider>
   );
 }

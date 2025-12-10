@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { useAuthWithPermissions } from '@/hooks/useAuthWithPermissions';
+import { useAuth } from '@/providers/AuthProvider';
 import { useRouter } from 'next/navigation';
 import { LogOut, Bell } from 'lucide-react';
 import {
@@ -15,7 +15,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 export function DashboardHeader() {
-  const { usuario, logout } = useAuthWithPermissions();
+  const { usuario, logout } = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {

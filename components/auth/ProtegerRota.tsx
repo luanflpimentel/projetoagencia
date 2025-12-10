@@ -3,7 +3,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthWithPermissions } from '@/hooks/useAuthWithPermissions';
+import { useAuth } from '@/providers/AuthProvider';
 
 interface ProtegerRotaProps {
   children: React.ReactNode;
@@ -32,12 +32,14 @@ export default function ProtegerRota({
   somenteAgencia = false,
   rotaRedirecionamento = '/dashboard/clientes'
 }: ProtegerRotaProps) {
-  const { usuario, loading } = useAuthWithPermissions();
+  const { usuario, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     // Aguardar carregamento
-    if (loading) return;
+    if (loading) {
+      return;
+    }
 
     // Se não está autenticado, redireciona para login
     if (!usuario) {
@@ -47,7 +49,6 @@ export default function ProtegerRota({
 
     // Se a rota é somente para agência e o usuário é cliente
     if (somenteAgencia && usuario.role !== 'agencia') {
-      console.warn(`⚠️ Acesso negado: ${usuario.email} tentou acessar área restrita`);
       router.push(rotaRedirecionamento);
       return;
     }
