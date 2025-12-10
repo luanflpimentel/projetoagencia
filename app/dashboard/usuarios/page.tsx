@@ -7,10 +7,8 @@ import ModalConfirmacao from '@/components/ui/modal-confirmacao';
 import { useToast } from '@/components/ui/toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuthWithPermissions } from '@/hooks/useAuthWithPermissions';
 import type { Usuario } from '@/lib/types';
-import { createClient } from '@/lib/supabase-browser';
 import { toggleUsuarioAtivo } from '@/app/actions/usuarios'; // ← NOVA IMPORT
 import ProtegerRota from '@/components/auth/ProtegerRota';
 import { Users, UserCheck, UserX, Shield } from 'lucide-react';
@@ -45,9 +43,14 @@ function UsuariosPageContent() {
   });
   
   const { success, error: errorToast, warning } = useToast();
-  const { permissoes } = useAuthWithPermissions();
-  const router = useRouter();
-  const supabase = createClient();
+  const { permissoes, usuario: usuarioAuth } = useAuthWithPermissions();
+
+  // Definir usuário logado quando o auth carregar
+  useEffect(() => {
+    if (usuarioAuth) {
+      setUsuarioLogado(usuarioAuth);
+    }
+  }, [usuarioAuth]);
 
   useEffect(() => {
     loadUsuarios();
@@ -74,23 +77,6 @@ function UsuariosPageContent() {
     try {
       setLoading(true);
       setError(null);
-
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-      if (authError || !user) {
-        router.push('/login');
-        return;
-      }
-
-      const { data: usuarioLogadoData, error: usuarioError } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (usuarioLogadoData) {
-        setUsuarioLogado(usuarioLogadoData as Usuario);
-      }
 
       // Chamar API que verifica permissões e retorna usuários apropriados
       const response = await fetch('/api/usuarios/listar');
