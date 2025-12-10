@@ -11,8 +11,17 @@ import { Plus, Search, Loader2, Users, CheckCircle, XCircle, RefreshCw } from 'l
 import type { VwClienteLista } from '@/lib/types';
 import { useAuthWithPermissions } from '@/hooks/useAuthWithPermissions';
 import { useToast } from '@/components/ui/toast';
+import ProtegerRota from '@/components/auth/ProtegerRota';
 
 export default function ClientesPage() {
+  return (
+    <ProtegerRota somenteAgencia>
+      <ClientesPageContent />
+    </ProtegerRota>
+  );
+}
+
+function ClientesPageContent() {
   const router = useRouter();
   const { usuario } = useAuthWithPermissions();
   const toast = useToast();
