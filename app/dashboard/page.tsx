@@ -42,6 +42,20 @@ function DashboardPageContent() {
 
   useEffect(() => {
     loadDashboardData();
+
+    // Detectar visibilidade da página
+    const handleVisibilityChange = () => {
+      if (!document.hidden && !loading) {
+        // Página ficou ativa - atualizar dados
+        loadDashboardData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   async function loadDashboardData() {

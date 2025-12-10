@@ -155,11 +155,11 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
   }
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className="bg-card rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-border">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+      <div className="bg-card rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-2 border-border">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-border flex items-center justify-between sticky top-0 bg-card">
-          <h2 className="text-xl font-semibold text-foreground">Novo Usuário</h2>
+        <div className="px-6 py-4 border-b-2 border-border flex items-center justify-between sticky top-0 bg-card z-10">
+          <h2 className="text-xl font-bold text-foreground">Novo Usuário</h2>
           <button
             onClick={onClose}
             className="text-muted-foreground hover:text-foreground transition-colors p-1 hover:bg-muted rounded-lg"
@@ -330,19 +330,19 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
           </div>
 
           {/* Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t-2 border-border">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-6 py-2.5 text-foreground hover:bg-muted rounded-lg transition-colors disabled:opacity-50 font-medium"
+              className="px-6 py-2.5 text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors disabled:opacity-50 font-semibold border-2 border-border"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading || (formData.role === 'cliente' && clientes.length === 0)}
-              className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm font-medium"
+              className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg font-semibold"
             >
               {loading ? (
                 <span className="flex items-center gap-2">

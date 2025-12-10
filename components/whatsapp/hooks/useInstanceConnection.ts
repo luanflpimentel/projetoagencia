@@ -42,6 +42,7 @@ export function useInstanceConnection({
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isPageVisible = useRef<boolean>(true);
 
   // ✅ NOVO: Verificar se já está conectado ANTES de gerar QR Code
   const checkIfAlreadyConnected = useCallback(async (): Promise<boolean> => {
@@ -277,6 +278,79 @@ export function useInstanceConnection({
     setProfileName(null);
     setPhoneNumber(null);
   }, [clearAllTimers]);
+
+  // Detectar visibilidade da página para pausar polling
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      isPageVisible.current = !document.hidden;
+
+      if (document.hidden) {
+        // Página ficou inativa - pausar polling para economizar recursos
+        console.log('⏸️ [HOOK] Página inativa - pausando polling');
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      } else if (state === 'waiting' || state === 'connecting') {
+        // Página voltou a ficar ativa - retomar polling
+        console.log('▶️ [HOOK] Página ativa - retomando polling');
+
+        pollingIntervalRef.current = setInterval(async () => {
+          const statusData = await checkConnectionStatus();
+          if (!statusData) return;
+
+          const instanceStatus = statusData.instance?.status;
+          const statusConnected = statusData.status?.connected;
+          const loggedIn = statusData.status?.loggedIn;
+          const jid = statusData.status?.jid;
+
+          if (jid && typeof jid === 'string' && jid.length > 0) {
+            setState('connecting');
+            if (countdownIntervalRef.current) {
+              clearInterval(countdownIntervalRef.current);
+            }
+
+            connectionTimeoutRef.current = setTimeout(() => {
+              setError({
+                type: 'timeout',
+                message: 'Conexão demorou muito. Tente novamente.',
+              });
+              setState('error');
+              clearAllTimers();
+            }, CONNECTION_TIMEOUT * 1000);
+          }
+
+          if (
+            instanceStatus === 'connected' &&
+            statusConnected === true &&
+            loggedIn === true &&
+            jid &&
+            typeof jid === 'string'
+          ) {
+            setIsConnected(true);
+            setProfileName(statusData.instance?.profileName || null);
+            setPhoneNumber(statusData.instance?.owner || null);
+            setState('connected');
+
+            clearAllTimers();
+
+            if (onConnected) {
+              onConnected(
+                statusData.instance?.profileName,
+                statusData.instance?.owner
+              );
+            }
+          }
+        }, POLLING_INTERVAL);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [state, checkConnectionStatus, clearAllTimers, onConnected]);
 
   // Cleanup ao desmontar
   useEffect(() => {

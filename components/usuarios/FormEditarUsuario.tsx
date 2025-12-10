@@ -119,13 +119,13 @@ export default function FormEditarUsuario({ usuario, onClose, onSuccess }: Props
   }
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div className="bg-card rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-border">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+      <div className="bg-card rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-2 border-border">
 
         {/* Header */}
-        <div className="px-6 py-4 border-b border-border flex items-center justify-between sticky top-0 bg-card">
+        <div className="px-6 py-4 border-b-2 border-border flex items-center justify-between sticky top-0 bg-card z-10">
           <div>
-            <h2 className="text-xl font-semibold text-foreground">
+            <h2 className="text-xl font-bold text-foreground">
               Editar Usuário
             </h2>
             <p className="text-sm text-muted-foreground mt-0.5">
@@ -243,18 +243,18 @@ export default function FormEditarUsuario({ usuario, onClose, onSuccess }: Props
           </div>
 
           {/* Botões */}
-          <div className="flex gap-3 mt-8 pt-6 border-t border-border">
+          <div className="flex gap-3 mt-8 pt-6 border-t-2 border-border">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-2.5 border border-input text-foreground rounded-lg hover:bg-muted transition-all font-medium"
+              className="flex-1 px-6 py-2.5 border-2 border-input text-foreground bg-muted rounded-lg hover:bg-muted/80 transition-all font-semibold"
               disabled={loading}
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="flex-1 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
             >
               {loading ? (
