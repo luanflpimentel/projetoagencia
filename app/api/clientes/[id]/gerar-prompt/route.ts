@@ -1,6 +1,7 @@
 // app/api/clientes/[id]/gerar-prompt/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { promptQueries, clientesQueries } from '@/lib/supabase-queries';
+import { promptQueries } from '@/lib/supabase-queries';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // Verificar se estamos em build time (variáveis não disponíveis)
 const isBuildTime = !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -22,11 +23,16 @@ export async function POST(
     const params = await context.params;
     const clienteId = params.id;
 
+    console.log('🔄 Gerando prompt para cliente:', clienteId);
+
     const body = await request.json();
     const { nome_escritorio, nome_agente } = body;
 
+    console.log('📝 Dados recebidos:', { nome_escritorio, nome_agente });
+
     // Validação básica
     if (!nome_escritorio || !nome_agente) {
+      console.error('❌ Validação falhou: campos obrigatórios ausentes');
       return NextResponse.json(
         { error: 'nome_escritorio e nome_agente são obrigatórios' },
         { status: 400 }
@@ -34,6 +40,7 @@ export async function POST(
     }
 
     // Gerar prompt usando a function do Supabase
+    console.log('🚀 Chamando promptQueries.gerar...');
     const { data: promptGerado, error: erroGerar } = await promptQueries.gerar(
       clienteId,
       nome_escritorio,
@@ -41,27 +48,45 @@ export async function POST(
     );
 
     if (erroGerar) {
-      console.error('Erro ao gerar prompt:', erroGerar);
+      console.error('❌ Erro ao gerar prompt:', {
+        message: erroGerar.message,
+        details: erroGerar.details,
+        hint: erroGerar.hint,
+        code: erroGerar.code
+      });
       return NextResponse.json(
-        { error: 'Erro ao gerar prompt' },
+        { error: `Erro ao gerar prompt: ${erroGerar.message}` },
         { status: 500 }
       );
     }
 
-    // Atualizar o cliente com o novo prompt
-    const { error: erroAtualizar } = await clientesQueries.atualizarPrompt(
-      clienteId,
-      promptGerado,
-      false // prompt_editado_manualmente = false (foi gerado automaticamente)
-    );
+    console.log('✅ Prompt gerado com sucesso');
+
+    // Atualizar o cliente com o novo prompt usando supabaseAdmin (bypassa RLS)
+    console.log('💾 Salvando prompt no banco de dados...');
+    const { error: erroAtualizar } = await supabaseAdmin
+      .from('clientes')
+      .update({
+        prompt_sistema: promptGerado,
+        prompt_editado_manualmente: false,
+        ultima_regeneracao: new Date().toISOString(),
+      })
+      .eq('id', clienteId);
 
     if (erroAtualizar) {
-      console.error('Erro ao salvar prompt:', erroAtualizar);
+      console.error('❌ Erro ao salvar prompt:', {
+        message: erroAtualizar.message,
+        details: erroAtualizar.details,
+        hint: erroAtualizar.hint,
+        code: erroAtualizar.code
+      });
       return NextResponse.json(
-        { error: 'Erro ao salvar prompt' },
+        { error: `Erro ao salvar prompt: ${erroAtualizar.message}` },
         { status: 500 }
       );
     }
+
+    console.log('✅ Prompt salvo com sucesso!');
 
     return NextResponse.json({
       success: true,
@@ -69,9 +94,9 @@ export async function POST(
       message: 'Prompt gerado com sucesso'
     });
   } catch (error) {
-    console.error('Erro no servidor:', error);
+    console.error('❌ Erro no servidor:', error);
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
+      { error: `Erro interno do servidor: ${error instanceof Error ? error.message : 'Erro desconhecido'}` },
       { status: 500 }
     );
   }
