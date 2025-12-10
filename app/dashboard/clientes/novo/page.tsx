@@ -8,12 +8,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
-import { createClient } from '@/lib/supabase-browser'; // ✨ MUDANÇA: usar supabase-browser
-import { logsQueries } from '@/lib/supabase-queries';
+import { ConviteModal } from '@/components/clientes/ConviteModal';
+import { useToast } from '@/components/ui/toast';
+
+interface ConviteData {
+  email: string;
+  token: string;
+  link: string;
+  expira_em: string;
+}
 
 export default function NovoClientePage() {
   const router = useRouter();
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
+  const [showConviteModal, setShowConviteModal] = useState(false);
+  const [conviteData, setConviteData] = useState<ConviteData | null>(null);
   const [formData, setFormData] = useState({
     nome_cliente: '',
     nome_escritorio: '',
@@ -48,52 +58,23 @@ export default function NovoClientePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validações básicas
+    if (!formData.nome_cliente || !formData.nome_instancia || !formData.nome_escritorio || !formData.nome_agente) {
+      toast.error('Preencha todos os campos obrigatórios');
+      return;
+    }
+
+    // Validar formato do nome_instancia
+    if (!/^[a-z0-9-]+$/.test(formData.nome_instancia)) {
+      toast.error('Nome da instância deve conter apenas letras minúsculas, números e hífen');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // 0. ✨ CRIAR CLIENTE SUPABASE E OBTER USUÁRIO AUTENTICADO
-      const supabase = createClient(); // ✨ Criar instância aqui
-      
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      
-      if (authError || !user) {
-        console.error('Erro de autenticação:', authError);
-        alert('Você precisa estar autenticado para criar um cliente');
-        setLoading(false);
-        router.push('/login');
-        return;
-      }
-
-      console.log('✅ Usuário autenticado:', user.id, user.email);
-
-      // 1. VALIDAÇÕES
-      if (!formData.nome_cliente || !formData.nome_instancia || !formData.nome_escritorio || !formData.nome_agente) {
-        alert('Preencha todos os campos obrigatórios');
-        setLoading(false);
-        return;
-      }
-
-      // Validar formato do nome_instancia
-      if (!/^[a-z0-9-]+$/.test(formData.nome_instancia)) {
-        alert('Nome da instância deve conter apenas letras minúsculas, números e hífen');
-        setLoading(false);
-        return;
-      }
-
-      // 2. VERIFICAR SE NOME_INSTANCIA JÁ EXISTE
-      const { data: existente } = await supabase
-        .from('clientes')
-        .select('id')
-        .eq('nome_instancia', formData.nome_instancia)
-        .single();
-
-      if (existente) {
-        alert('Este nome de instância já está sendo usado por outro cliente');
-        setLoading(false);
-        return;
-      }
-
-      // 3. GERAR PROMPT SISTEMA PADRÃO
+      // Gerar prompt sistema padrão
       const promptSistema = `Você é ${formData.nome_agente}, assistente virtual do escritório ${formData.nome_escritorio}.
 
 Sua função é atender potenciais clientes via WhatsApp de forma profissional, cordial e eficiente.
@@ -113,13 +94,11 @@ IMPORTANTE:
 - Foque em entender e qualificar o caso
 - Mantenha o tom acolhedor do ${formData.nome_escritorio}`;
 
-      console.log('📝 Preparando para criar cliente...');
-      console.log('Usuario ID:', user.id);
-
-      // 4. CRIAR CLIENTE NO BANCO
-      const { data: novoCliente, error: erroCliente } = await supabase
-        .from('clientes')
-        .insert([{
+      // Criar cliente via API
+      const response = await fetch('/api/clientes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           nome_cliente: formData.nome_cliente,
           nome_escritorio: formData.nome_escritorio,
           nome_agente: formData.nome_agente,
@@ -127,30 +106,24 @@ IMPORTANTE:
           numero_whatsapp: formData.numero_whatsapp || null,
           email: formData.email || null,
           prompt_sistema: promptSistema,
-          prompt_editado_manualmente: false,
-          status_conexao: 'desconectado',
-          ativo: true,
-          usuario_id: user.id, // ✨ ESSENCIAL PARA RLS!
-        }])
-        .select()
-        .single();
+        })
+      });
 
-      if (erroCliente) {
-        console.error('❌ Erro ao criar cliente:', erroCliente);
-        throw new Error(`Erro ao criar cliente: ${erroCliente.message}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao criar cliente');
       }
 
-      console.log('✅ Cliente criado:', novoCliente);
+      const data = await response.json();
+      console.log('✅ Cliente criado:', data);
 
-      // 5. CRIAR INSTÂNCIA NA UAZAPI
-      console.log('🔄 Criando instância na UAZAPI...');
-      
+      // Criar instância na UAZAPI
       const responseUazapi = await fetch('/api/uazapi/instances', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          clienteId: novoCliente.id,
-          nomeInstancia: novoCliente.nome_instancia,
+          clienteId: data.cliente.id,
+          nomeInstancia: data.cliente.nome_instancia,
         }),
       });
 
@@ -158,43 +131,32 @@ IMPORTANTE:
 
       if (!responseUazapi.ok) {
         console.error('❌ Erro na UAZAPI:', dataUazapi);
-        
-        // Cliente foi criado no banco, mas instância falhou
-        alert(`Cliente criado, mas erro ao criar instância na UAZAPI: ${dataUazapi.error}\n\nVocê pode tentar conectar manualmente depois.`);
-        
-        // Log do erro
-        await logsQueries.criar({
-          cliente_id: novoCliente.id,
-          tipo_evento: 'erro_criar_instancia',
-          descricao: `Erro ao criar instância: ${dataUazapi.error}`,
-        });
-        
-        // Redirecionar mesmo assim
-        router.push('/dashboard/clientes');
-        return;
+        toast.warning(`Cliente criado, mas erro ao criar instância na UAZAPI. Você pode tentar conectar manualmente depois.`);
+      } else {
+        console.log('✅ Instância criada na UAZAPI');
       }
 
-      console.log('✅ Instância criada na UAZAPI:', dataUazapi);
-
-      // 6. SUCESSO!
-      alert('Cliente e instância WhatsApp criados com sucesso!');
-      
-      // Log de sucesso
-      await logsQueries.criar({
-        cliente_id: novoCliente.id,
-        tipo_evento: 'cliente_criado',
-        descricao: `Cliente ${novoCliente.nome_cliente} criado com instância ${novoCliente.nome_instancia}`,
-      });
-
-      // 7. REDIRECIONAR
-      router.push('/dashboard/clientes');
+      // Se tiver convite, mostrar modal
+      if (data.convite) {
+        setConviteData(data.convite);
+        setShowConviteModal(true);
+        toast.success('Cliente criado com sucesso! Link de convite gerado.');
+      } else {
+        toast.success('Cliente criado com sucesso!');
+        router.push('/dashboard/clientes');
+      }
 
     } catch (error: any) {
-      console.error('❌ Erro geral:', error);
-      alert(`Erro: ${error.message}`);
+      console.error('❌ Erro:', error);
+      toast.error(error.message || 'Erro ao criar cliente');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCloseModal = () => {
+    setShowConviteModal(false);
+    router.push('/dashboard/clientes');
   };
 
   return (
@@ -343,6 +305,16 @@ IMPORTANTE:
           </form>
         </CardContent>
       </Card>
+
+      {/* Modal de Convite */}
+      {showConviteModal && conviteData && (
+        <ConviteModal
+          isOpen={showConviteModal}
+          onClose={handleCloseModal}
+          convite={conviteData}
+          nomeCliente={formData.nome_cliente}
+        />
+      )}
     </div>
   );
 }

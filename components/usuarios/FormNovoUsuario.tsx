@@ -180,8 +180,8 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Email <span className="text-destructive">*</span>
+            <label className="block text-sm font-semibold text-foreground mb-2">
+              Email <span className="text-destructive font-bold">*</span>
             </label>
             <input
               type="email"
@@ -196,8 +196,8 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
 
           {/* Nome Completo */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Nome Completo <span className="text-destructive">*</span>
+            <label className="block text-sm font-semibold text-foreground mb-2">
+              Nome Completo <span className="text-destructive font-bold">*</span>
             </label>
             <input
               type="text"
@@ -212,8 +212,8 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
 
           {/* Telefone */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Telefone <span className="text-muted-foreground text-xs">(opcional)</span>
+            <label className="block text-sm font-semibold text-foreground mb-2">
+              Telefone <span className="text-muted-foreground text-xs font-normal">(opcional)</span>
             </label>
             <input
               type="tel"
@@ -227,8 +227,8 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
 
           {/* Role */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Tipo de Usuário <span className="text-destructive">*</span>
+            <label className="block text-sm font-semibold text-foreground mb-2">
+              Tipo de Usuário <span className="text-destructive font-bold">*</span>
             </label>
             <select
               required
@@ -248,8 +248,8 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
           {/* Cliente (apenas se role for cliente) */}
           {formData.role === 'cliente' && (
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Cliente <span className="text-destructive">*</span>
+              <label className="block text-sm font-semibold text-foreground mb-2">
+                Cliente <span className="text-destructive font-bold">*</span>
               </label>
               {loadingClientes ? (
                 <div className="text-sm text-muted-foreground">Carregando clientes...</div>
@@ -280,7 +280,7 @@ export default function FormNovoUsuario({ onClose, onSuccess }: FormNovoUsuarioP
 
           {/* Senha Temporária */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
+            <label className="block text-sm font-semibold text-foreground mb-2">
               Senha Temporária
             </label>
             <div className="flex items-center gap-2">

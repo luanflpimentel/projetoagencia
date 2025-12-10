@@ -155,7 +155,7 @@ export default function FormEditarUsuario({ usuario, onClose, onSuccess }: Props
 
             {/* Email (não editável) */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
+              <label className="block text-sm font-semibold text-foreground mb-2">
                 Email
               </label>
               <div className="relative">
@@ -175,8 +175,8 @@ export default function FormEditarUsuario({ usuario, onClose, onSuccess }: Props
 
               {/* Nome Completo */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Nome Completo <span className="text-destructive">*</span>
+                <label className="block text-sm font-semibold text-foreground mb-2">
+                  Nome Completo <span className="text-destructive font-bold">*</span>
                 </label>
                 <input
                   type="text"
@@ -190,8 +190,8 @@ export default function FormEditarUsuario({ usuario, onClose, onSuccess }: Props
 
               {/* Telefone */}
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Telefone <span className="text-muted-foreground text-xs">(opcional)</span>
+                <label className="block text-sm font-semibold text-foreground mb-2">
+                  Telefone <span className="text-muted-foreground text-xs font-normal">(opcional)</span>
                 </label>
                 <input
                   type="tel"
@@ -204,8 +204,8 @@ export default function FormEditarUsuario({ usuario, onClose, onSuccess }: Props
 
               {/* Role */}
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Tipo de Usuário <span className="text-destructive">*</span>
+                <label className="block text-sm font-semibold text-foreground mb-2">
+                  Tipo de Usuário <span className="text-destructive font-bold">*</span>
                 </label>
                 <select
                   value={formData.role}
@@ -221,8 +221,8 @@ export default function FormEditarUsuario({ usuario, onClose, onSuccess }: Props
               {/* Cliente */}
               {formData.role === 'cliente' && (
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Cliente <span className="text-destructive">*</span>
+                  <label className="block text-sm font-semibold text-foreground mb-2">
+                    Cliente <span className="text-destructive font-bold">*</span>
                   </label>
                   <select
                     value={formData.cliente_id}

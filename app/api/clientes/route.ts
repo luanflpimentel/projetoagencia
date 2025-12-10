@@ -198,8 +198,56 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 🔗 Gerar link de convite se email fornecido
+    let convite = null;
+    if (body.email && body.gerar_convite !== false) {
+      try {
+        console.log(`🔗 Gerando link de convite para: ${body.email}`);
+
+        // Gerar token único de convite
+        const token = crypto.randomUUID();
+        const expiraEm = new Date();
+        expiraEm.setDate(expiraEm.getDate() + 7); // Expira em 7 dias
+
+        // Salvar convite no banco usando supabaseAdmin
+        const { data: conviteData, error: conviteError } = await supabaseAdmin
+          .from('convites')
+          .insert({
+            email: body.email,
+            nome_completo: body.nome_cliente,
+            role: 'cliente',
+            cliente_id: cliente.id,
+            telefone: body.numero_whatsapp || null,
+            token,
+            expira_em: expiraEm.toISOString(),
+            criado_por: user.id
+          })
+          .select()
+          .single();
+
+        if (conviteError) {
+          console.error('Erro ao criar convite:', conviteError);
+        } else {
+          const linkConvite = `${request.nextUrl.origin}/aceitar-convite?token=${token}`;
+          convite = {
+            email: body.email,
+            token,
+            link: linkConvite,
+            expira_em: expiraEm.toISOString()
+          };
+          console.log(`✅ Convite gerado: ${linkConvite}`);
+        }
+      } catch (error) {
+        console.error('Erro ao gerar convite:', error);
+        // Não falhar a criação do cliente por causa disso
+      }
+    }
+
     console.log(`✅ Cliente criado: ${cliente.id}`);
-    return NextResponse.json(cliente, { status: 201 });
+    return NextResponse.json({
+      cliente,
+      convite
+    }, { status: 201 });
     
   } catch (error) {
     console.error('Erro no servidor:', error);
