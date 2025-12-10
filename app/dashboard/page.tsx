@@ -45,8 +45,8 @@ function DashboardPageContent() {
 
     // Detectar visibilidade da página
     const handleVisibilityChange = () => {
-      if (!document.hidden && !loading) {
-        // Página ficou ativa - atualizar dados
+      // Página ficou ativa - atualizar dados (sem verificar loading)
+      if (!document.hidden) {
         loadDashboardData();
       }
     };

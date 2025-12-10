@@ -23,6 +23,11 @@ export function useAuthWithPermissions() {
     const supabase = createClient();
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: any, session: any) => {
+        // Ignorar eventos de TOKEN_REFRESHED para evitar re-loads desnecessários
+        if (event === 'TOKEN_REFRESHED') {
+          return;
+        }
+
         if (event === 'SIGNED_IN' && session) {
           await loadUsuario();
         } else if (event === 'SIGNED_OUT') {
@@ -41,6 +46,7 @@ export function useAuthWithPermissions() {
   async function loadUsuario() {
     // Evitar múltiplas chamadas simultâneas
     if (loadingRef.current) {
+      console.log('⏸️ [AUTH] loadUsuario já está em execução, ignorando');
       return;
     }
 
