@@ -64,8 +64,9 @@ export async function POST(
         })
         .eq('id', cliente.id);
 
-      // Executar provisionamento completo
-      const provisionResult = await chatwootService.provisionComplete(
+      // Executar provisionamento FASE 1 (Account + User)
+      // A Inbox será criada quando o WhatsApp for conectado (FASE 2)
+      const provisionResult = await chatwootService.provisionAccountAndUser(
         cliente.nome_escritorio,
         cliente.email
       );
@@ -79,9 +80,9 @@ export async function POST(
             chatwoot_user_id: provisionResult.user_id,
             chatwoot_user_email: provisionResult.user_email,
             chatwoot_user_access_token: provisionResult.user_access_token,
-            chatwoot_inbox_id: provisionResult.inbox_id,
-            chatwoot_channel_id: provisionResult.channel_id,
-            chatwoot_status: 'active',
+            chatwoot_inbox_id: null, // Será preenchido na FASE 2
+            chatwoot_channel_id: null,
+            chatwoot_status: 'pending', // Aguardando conexão do WhatsApp
             chatwoot_provisioned_at: new Date().toISOString(),
             chatwoot_error_message: null,
             atualizado_em: new Date().toISOString(),
@@ -92,22 +93,22 @@ export async function POST(
         await logsQueries.criar({
           cliente_id: cliente.id,
           tipo_evento: 'chatwoot_provisionado',
-          descricao: `Chatwoot provisionado com sucesso (retry) para ${cliente.nome_cliente}`,
+          descricao: `Chatwoot Account e User criados (retry) para ${cliente.nome_cliente}. Inbox será criada ao conectar WhatsApp.`,
           detalhes: {
             account_id: provisionResult.account_id,
-            inbox_id: provisionResult.inbox_id,
+            user_id: provisionResult.user_id,
             retry: true,
           },
         });
 
-        console.log('✅ [CHATWOOT-RETRY] Provisionamento concluído com sucesso!');
+        console.log('✅ [CHATWOOT-RETRY] Provisionamento FASE 1 concluído com sucesso!');
 
         return NextResponse.json({
           success: true,
-          message: 'Chatwoot provisionado com sucesso!',
+          message: 'Chatwoot Account e User criados! Conecte o WhatsApp para completar.',
           data: {
             account_id: provisionResult.account_id,
-            inbox_id: provisionResult.inbox_id,
+            user_id: provisionResult.user_id,
             user_email: provisionResult.user_email,
           },
         });
