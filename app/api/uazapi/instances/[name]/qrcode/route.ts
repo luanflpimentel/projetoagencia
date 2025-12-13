@@ -61,46 +61,65 @@ export async function GET(
     // ✨ VERIFICAR STATUS PRIMEIRO
     try {
       const statusData = await uazapiService.getStatus(instanceToken);
-      
+
       console.log('📊 Status completo da UAZAPI:');
       console.log(JSON.stringify(statusData, null, 2));
-      
+
       // Extrair status corretamente
       const actualStatus = statusData.instance?.status || statusData.status;
       console.log(`✅ Status extraído: "${actualStatus}"`);
 
-      // Se travado em connecting, resetar
-      if (actualStatus === 'connecting' || actualStatus === 'qrReadWait') {
-        console.log('🔄 Instância travada, resetando...');
-        
+      // ✅ RESET: Se travado OU desconectado, sempre resetar antes de gerar QR
+      if (actualStatus === 'connecting' || actualStatus === 'qrReadWait' || actualStatus === 'disconnected') {
+        console.log('🔄 Instância precisa ser resetada, forçando logout...');
+
         try {
           await uazapiService.logout(instanceToken);
-          console.log('✅ Instância resetada');
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          console.log('✅ Logout executado com sucesso');
+          await new Promise(resolve => setTimeout(resolve, 3000)); // ✅ Aumentado para 3s
         } catch (logoutError: any) {
-          console.log('⚠️ Erro ao resetar:', logoutError.message);
+          console.log('⚠️ Erro ao fazer logout (ignorando):', logoutError.message);
+          // Ignorar erro de logout e tentar gerar QR mesmo assim
         }
       }
     } catch (statusError: any) {
       console.log('⚠️ Erro ao verificar status:', statusError.message);
     }
 
-    // Gerar QR Code
-    const qrData = await uazapiService.getQRCode(instanceToken);
+    // Gerar QR Code (primeira tentativa)
+    let qrData = await uazapiService.getQRCode(instanceToken);
 
-    console.log('📦 Resposta completa do QR Code:');
+    console.log('📦 Resposta completa do QR Code (1ª tentativa):');
     console.log(JSON.stringify(qrData, null, 2));
 
     // ✨ EXTRAIR QR CODE DA ESTRUTURA CORRETA
-    const qrcode = qrData.instance?.qrcode || qrData.qrcode;
-    const pairingCode = qrData.instance?.paircode || qrData.pairingCode;
+    let qrcode = qrData.instance?.qrcode || qrData.qrcode;
+    let pairingCode = qrData.instance?.paircode || qrData.pairingCode;
 
-    console.log('🔍 QR Code extraído:', qrcode ? 'SIM (✅)' : 'NÃO (❌)');
+    console.log('🔍 QR Code extraído (1ª tentativa):', qrcode ? 'SIM (✅)' : 'NÃO (❌)');
 
-    // Verificar se tem QR Code
+    // ✅ SEGUNDA TENTATIVA: Se não gerou QR, aguardar e tentar novamente
     if (!qrcode && !pairingCode) {
-      console.log('❌ Sem QR Code na resposta');
-      
+      console.log('⚠️ Primeira tentativa sem QR Code, aguardando 2s e tentando novamente...');
+
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Segunda tentativa
+      qrData = await uazapiService.getQRCode(instanceToken);
+
+      console.log('📦 Resposta completa do QR Code (2ª tentativa):');
+      console.log(JSON.stringify(qrData, null, 2));
+
+      qrcode = qrData.instance?.qrcode || qrData.qrcode;
+      pairingCode = qrData.instance?.paircode || qrData.pairingCode;
+
+      console.log('🔍 QR Code extraído (2ª tentativa):', qrcode ? 'SIM (✅)' : 'NÃO (❌)');
+    }
+
+    // Verificar se tem QR Code após tentativas
+    if (!qrcode && !pairingCode) {
+      console.log('❌ Sem QR Code mesmo após 2 tentativas');
+
       if (qrData.connected) {
         return NextResponse.json(
           { error: 'WhatsApp já está conectado. Desconecte primeiro.' },
@@ -116,8 +135,8 @@ export async function GET(
 
     console.log('✅ QR Code gerado com sucesso!');
 
-    // Atualizar status
-    await supabase
+    // Atualizar status usando admin client
+    await supabaseAdmin
       .from('clientes')
       .update({
         status_conexao: 'connecting',

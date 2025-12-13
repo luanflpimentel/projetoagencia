@@ -8,19 +8,19 @@
 export type StatusConexao = 'desconectado' | 'connecting' | 'conectado';
 export type StatusAtendimento = 'em_andamento' | 'qualificado' | 'desqualificado' | 'encerrado';
 
-// ATUALIZADO: Tipos de eventos do sistema (incluindo UAZAPI)
-export type TipoEvento = 
+// ATUALIZADO: Tipos de eventos do sistema (incluindo UAZAPI + Chatwoot)
+export type TipoEvento =
   // Clientes
   | 'cliente_criado'
   | 'cliente_editado'
   | 'cliente_excluido'
-  
+
   // Templates
   | 'template_criado'
   | 'template_editado'
   | 'template_excluido'
   | 'template_usado'
-  
+
   // WhatsApp/UAZAPI
   | 'instancia_criada'
   | 'qrcode_gerado'
@@ -29,19 +29,26 @@ export type TipoEvento =
   | 'status_alterado'
   | 'mensagem_recebida'
   | 'webhook_recebido'
-  
+  | 'grupo_avisos_criado'
+  | 'ia_ativada_desativada'
+
+  // Chatwoot
+  | 'chatwoot_provisionado'
+  | 'chatwoot_erro'
+  | 'chatwoot_uazapi_integrado'
+
   // Atendimentos
   | 'atendimento_iniciado'
   | 'atendimento_finalizado'
   | 'atendimento_qualificado'
   | 'atendimento_desqualificado'
-  
+
   // Erros
   | 'erro_criar_instancia'
   | 'erro_gerar_qrcode'
   | 'erro_desconectar'
   | 'erro_geral'
-  
+
   // Configurações
   | 'config_atualizada'
   | 'prompt_editado';
@@ -63,7 +70,21 @@ export interface Cliente {
   status_conexao: StatusConexao; // default: 'desconectado'
   ultima_conexao?: string | null; // ISO timestamp
   ultima_desconexao?: string | null; // ISO timestamp
-  usuario_id: string; // ✨ NOVO - FK para auth.users
+  usuario_id: string; // FK para auth.users
+  ia_ativa: boolean; // default: true - Controla se IA responde mensagens
+  grupo_avisos_id?: string | null; // ID do grupo de avisos criado na primeira conexão
+
+  // Chatwoot Integration
+  chatwoot_account_id?: number | null;
+  chatwoot_user_id?: number | null;
+  chatwoot_user_email?: string | null;
+  chatwoot_user_access_token?: string | null;
+  chatwoot_inbox_id?: number | null;
+  chatwoot_channel_id?: number | null;
+  chatwoot_status?: 'pending' | 'active' | 'error' | null;
+  chatwoot_provisioned_at?: string | null; // ISO timestamp
+  chatwoot_error_message?: string | null;
+
   ativo: boolean; // default: true
   criado_em: string; // ISO timestamp
   atualizado_em: string; // ISO timestamp
@@ -121,13 +142,26 @@ export interface VwClienteLista {
   nome_cliente: string;
   nome_instancia: string;
   numero_whatsapp: string | null;
+  email: string | null;
   status_conexao: StatusConexao;
   nome_escritorio: string;
   nome_agente: string;
   prompt_editado_manualmente: boolean;
   ultima_conexao: string | null;
-  usuario_id: string; // ✨ NOVO - Permite filtro no frontend
+  usuario_id: string; // Permite filtro no frontend
+  ia_ativa: boolean; // Controla se IA responde mensagens
   ativo: boolean;
+
+  // Campos Chatwoot
+  chatwoot_account_id?: number | null;
+  chatwoot_user_id?: number | null;
+  chatwoot_user_email?: string | null;
+  chatwoot_user_access_token?: string | null;
+  chatwoot_inbox_id?: number | null;
+  chatwoot_channel_id?: number | null;
+  chatwoot_status?: 'pending' | 'active' | 'error' | null;
+  chatwoot_provisioned_at?: string | null;
+  chatwoot_error_message?: string | null;
 }
 
 export interface VwDashboardStats {
@@ -326,6 +360,15 @@ export const TIPO_EVENTO_LABELS: Record<TipoEvento, string> = {
   // Configurações
   config_atualizada: 'Configuração Atualizada',
   prompt_editado: 'Prompt Editado',
+
+  // IA e Grupos
+  grupo_avisos_criado: 'Grupo de Avisos Criado',
+  ia_ativada_desativada: 'IA Ativada/Desativada',
+
+  // Chatwoot
+  chatwoot_provisionado: 'Chatwoot Provisionado',
+  chatwoot_erro: 'Erro no Chatwoot',
+  chatwoot_uazapi_integrado: 'Chatwoot Integrado à UAZAPI',
 };
 
 export const AREAS_ATUACAO = [

@@ -101,10 +101,10 @@ export async function GET(
       isLoggedIn
     });
 
-    // Atualizar status no banco se mudou
+    // Atualizar status no banco se mudou (usando admin para bypass de RLS)
     const dbStatus = isConnected ? 'conectado' : 'desconectado';
-    
-    const { data: currentCliente } = await supabase
+
+    const { data: currentCliente } = await supabaseAdmin
       .from('clientes')
       .select('status_conexao')
       .eq('id', cliente.id)
@@ -112,8 +112,8 @@ export async function GET(
 
     if (currentCliente?.status_conexao !== dbStatus) {
       console.log(`📝 Atualizando banco: ${currentCliente?.status_conexao} → ${dbStatus}`);
-      
-      await supabase
+
+      await supabaseAdmin
         .from('clientes')
         .update({
           status_conexao: dbStatus,

@@ -102,6 +102,10 @@ export async function GET() {
 
 // POST - Criar novo cliente
 export async function POST(request: NextRequest) {
+  // Importações lazy (só carrega quando criar cliente)
+  const { chatwootService } = await import('@/lib/services/chatwoot.service');
+  const { logsQueries } = await import('@/lib/queries/logs');
+
   try {
     const supabase = await createClient(); // ← AWAIT aqui!
     
@@ -162,10 +166,10 @@ export async function POST(request: NextRequest) {
 
     if (clienteError) {
       console.error('Erro ao criar cliente:', clienteError);
-      
+
       // Verificar se é erro de duplicação
-      const isDuplicateError = 
-        clienteError.message?.includes('duplicate key') || 
+      const isDuplicateError =
+        clienteError.message?.includes('duplicate key') ||
         ('code' in clienteError && clienteError.code === '23505');
 
       if (isDuplicateError) {
@@ -179,6 +183,100 @@ export async function POST(request: NextRequest) {
         { error: 'Erro ao criar cliente' },
         { status: 500 }
       );
+    }
+
+    // ✅ FASE 1: Provisionar Chatwoot (Account + User, SEM Inbox)
+    // A Inbox será criada na FASE 2, ao conectar o WhatsApp
+    let chatwootProvisioned = false;
+    if (body.email) {
+      console.log('🚀 [CHATWOOT FASE 1] Criando Account e User...');
+
+      try {
+        // Atualizar status para 'pending'
+        await supabaseAdmin
+          .from('clientes')
+          .update({ chatwoot_status: 'pending' })
+          .eq('id', cliente.id);
+
+        // Executar provisionamento (apenas Account + User)
+        const provisionResult = await chatwootService.provisionAccountAndUser(
+          dadosCliente.nome_escritorio,
+          body.email
+        );
+
+        if (provisionResult.success) {
+          // ✅ Sucesso: Salvar dados no banco (sem inbox_id ainda)
+          await supabaseAdmin
+            .from('clientes')
+            .update({
+              chatwoot_account_id: provisionResult.account_id,
+              chatwoot_user_id: provisionResult.user_id,
+              chatwoot_user_email: provisionResult.user_email,
+              chatwoot_user_access_token: provisionResult.user_access_token,
+              // inbox_id e channel_id serão preenchidos na FASE 2
+              chatwoot_inbox_id: null,
+              chatwoot_channel_id: null,
+              chatwoot_status: 'pending', // Ainda pending até criar a inbox
+              chatwoot_provisioned_at: new Date().toISOString(),
+              chatwoot_error_message: null,
+              atualizado_em: new Date().toISOString(),
+            })
+            .eq('id', cliente.id);
+
+          // Log de sucesso
+          await logsQueries.criar({
+            cliente_id: cliente.id,
+            tipo_evento: 'chatwoot_provisionado',
+            descricao: `Chatwoot Account e User criados para ${dadosCliente.nome_cliente}. Inbox será criada ao conectar WhatsApp.`,
+            detalhes: {
+              account_id: provisionResult.account_id,
+              user_id: provisionResult.user_id,
+            },
+          });
+
+          console.log('✅ [CHATWOOT FASE 1] Account e User criados! Inbox será criada ao conectar WhatsApp.');
+          chatwootProvisioned = true;
+        } else {
+          // ❌ Erro: Salvar mensagem de erro
+          await supabaseAdmin
+            .from('clientes')
+            .update({
+              chatwoot_status: 'error',
+              chatwoot_error_message: `${provisionResult.step}: ${provisionResult.error}`,
+              atualizado_em: new Date().toISOString(),
+            })
+            .eq('id', cliente.id);
+
+          // Log de erro
+          await logsQueries.criar({
+            cliente_id: cliente.id,
+            tipo_evento: 'chatwoot_erro',
+            descricao: `Erro ao provisionar Chatwoot: ${provisionResult.step}`,
+            detalhes: {
+              step: provisionResult.step,
+              error: provisionResult.error,
+            },
+          });
+
+          console.error('❌ [CHATWOOT] Falha no provisionamento:', provisionResult);
+        }
+      } catch (error: any) {
+        console.error('❌ [CHATWOOT] Erro inesperado:', error);
+
+        // Salvar erro no banco
+        await supabaseAdmin
+          .from('clientes')
+          .update({
+            chatwoot_status: 'error',
+            chatwoot_error_message: `Erro inesperado: ${error.message}`,
+            atualizado_em: new Date().toISOString(),
+          })
+          .eq('id', cliente.id);
+
+        // Não falhar a criação do cliente por causa disso
+      }
+    } else {
+      console.log('⏭️ [CHATWOOT] Sem email, pulando provisionamento');
     }
 
     // Se tiver template_ids, associar templates
@@ -244,9 +342,27 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`✅ Cliente criado: ${cliente.id}`);
+
+    // Recarregar cliente para incluir dados atualizados do Chatwoot
+    const { data: clienteAtualizado } = await supabaseAdmin
+      .from('clientes')
+      .select('*')
+      .eq('id', cliente.id)
+      .single();
+
     return NextResponse.json({
-      cliente,
-      convite
+      cliente: clienteAtualizado || cliente,
+      convite,
+      chatwoot: chatwootProvisioned ? {
+        provisioned: true,
+        status: 'pending', // Pending até conectar WhatsApp
+        message: 'Account e User criados! Inbox será criada ao conectar WhatsApp.',
+        credentials: {
+          url: process.env.CHATWOOT_BASE_URL,
+          email: body.email,
+          password: 'AgenciaTalisma1!', // Senha fixa
+        }
+      } : null,
     }, { status: 201 });
     
   } catch (error) {

@@ -117,6 +117,12 @@ IMPORTANTE:
       const data = await response.json();
       console.log('✅ Cliente criado:', data);
 
+      // ✅ Notificar provisionamento do Chatwoot
+      if (data.chatwoot?.provisioned) {
+        toast.success('✅ Chatwoot: Account e User criados! Inbox será criada ao conectar WhatsApp.');
+        console.log('✅ Chatwoot provisionado (Fase 1):', data.chatwoot);
+      }
+
       // Criar instância na UAZAPI
       const responseUazapi = await fetch('/api/uazapi/instances', {
         method: 'POST',
@@ -297,8 +303,10 @@ IMPORTANTE:
                 <p className="font-medium">Aguarde...</p>
                 <ul className="list-disc list-inside mt-2 space-y-1">
                   <li>Criando cliente no banco de dados</li>
+                  {formData.email && <li>Provisionando Chatwoot (Account e User)</li>}
                   <li>Criando instância WhatsApp na UAZAPI</li>
                   <li>Configurando webhooks</li>
+                  {formData.email && <li className="text-blue-600">Inbox do Chatwoot será criada ao conectar WhatsApp</li>}
                 </ul>
               </div>
             )}

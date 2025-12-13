@@ -133,7 +133,7 @@ export class UazapiService {
         statusText: response.statusText,
       });
 
-      // ✨ Para /instance/connect, aceitar 409 se tiver QR Code
+      // ✨ Para /instance/connect, aceitar 409 (retornar dados mesmo assim)
       const isConnectEndpoint = endpoint.includes('/connect');
       const is409 = response.status === 409;
 
@@ -143,13 +143,11 @@ export class UazapiService {
         throw new Error(`UAZAPI Error [${response.status}]: ${errorText}`);
       }
 
-      // Pegar JSON mesmo em 409
+      // Pegar JSON (mesmo em 409 para /connect)
       const data = await response.json();
 
-      // Se 409 mas sem QR Code, lançar erro
-      if (is409 && isConnectEndpoint && !data.qrcode && !data.instance?.qrcode) {
-        throw new Error(`Instance já está conectada ou em processo de conexão`);
-      }
+      // ✅ REMOVIDO: Não lançar erro aqui, deixar o endpoint decidir
+      // O endpoint /qrcode vai lidar com a ausência de QR Code
 
       return data;
 
@@ -251,9 +249,38 @@ export class UazapiService {
     name: string,
     participants: string[]
   ): Promise<any> {
-    return this.request('/instance/group', {
+    return this.request('/group/create', {
       method: 'POST',
       body: JSON.stringify({ name, participants }),
+    }, instanceToken);
+  }
+
+  /**
+   * PASSO 5 (FASE 2): Configurar integração Chatwoot na UAZAPI
+   */
+  async configureChatwoot(
+    instanceToken: string,
+    chatwootConfig: {
+      url: string;
+      access_token: string;
+      account_id: number;
+      inbox_id: number;
+    }
+  ): Promise<any> {
+    console.log('📝 [STEP 5] Configurando Chatwoot na UAZAPI...');
+
+    return this.request('/chatwoot/config', {
+      method: 'PUT',
+      body: JSON.stringify({
+        enabled: true,
+        url: chatwootConfig.url,
+        access_token: chatwootConfig.access_token,
+        account_id: chatwootConfig.account_id,
+        inbox_id: chatwootConfig.inbox_id,
+        ignore_groups: false,
+        sign_messages: false,
+        create_new_conversation: false,
+      }),
     }, instanceToken);
   }
 }

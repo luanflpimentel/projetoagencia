@@ -1,10 +1,18 @@
-// components/whatsapp/qrcode-modal.tsx - Modal QR Code REFATORADO E OTIMIZADO
+// components/whatsapp/qrcode-modal.tsx - Modal QR Code com Dialog Shadcn
 
 'use client';
 
 import React, { useEffect, useCallback } from 'react';
-import { X, RefreshCw, CheckCircle, AlertCircle, Loader2, Smartphone } from 'lucide-react';
+import { RefreshCw, CheckCircle, AlertCircle, Loader2, Smartphone } from 'lucide-react';
 import { useInstanceConnection } from './hooks/useInstanceConnection';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface QRCodeModalProps {
   isOpen: boolean;
@@ -13,13 +21,13 @@ interface QRCodeModalProps {
   onConnected?: () => void;
 }
 
-export function QRCodeModal({ 
-  isOpen, 
-  onClose, 
+const QRCodeModalComponent = ({
+  isOpen,
+  onClose,
   instanceName,
-  onConnected 
-}: QRCodeModalProps) {
-  
+  onConnected
+}: QRCodeModalProps) => {
+
   const {
     state,
     qrCode,
@@ -34,7 +42,7 @@ export function QRCodeModal({
     instanceName,
     onConnected: (name, phone) => {
       console.log('🎉 [MODAL] Callback onConnected:', { name, phone });
-      
+
       // Aguardar 2 segundos antes de fechar
       setTimeout(() => {
         if (onConnected) {
@@ -49,35 +57,44 @@ export function QRCodeModal({
     }
   });
 
-  // ✅ OTIMIZADO: Memorizar handler de fechar
+  // Handler de fechar
   const handleClose = useCallback(() => {
-    onClose();
-    resetConnection();
-  }, [onClose, resetConnection]);
+    // Só permite fechar se não estiver connecting ou connected
+    if (state !== 'connecting' && state !== 'connected') {
+      onClose();
+      resetConnection();
+    }
+  }, [state, onClose, resetConnection]);
 
-  // ✅ OTIMIZADO: Iniciar conexão ao abrir modal (sem função intermediária)
+  // Iniciar conexão ao abrir modal
+  const hasStartedRef = React.useRef(false);
+
   useEffect(() => {
-    if (isOpen && state === 'idle') {
+    if (isOpen && state === 'idle' && !hasStartedRef.current) {
       console.log('🚀 [MODAL] Modal aberto, iniciando conexão...');
+      hasStartedRef.current = true;
       startConnection();
+    }
+
+    // Reset quando fechar
+    if (!isOpen) {
+      hasStartedRef.current = false;
     }
   }, [isOpen, state, startConnection]);
 
-  // ✅ OTIMIZADO: Fechar com ESC usando handler memorizado
+  // Fechar com ESC
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && state !== 'connected' && state !== 'connecting') {
         handleClose();
       }
     };
-    
+
     if (isOpen) {
       window.addEventListener('keydown', handleEsc);
       return () => window.removeEventListener('keydown', handleEsc);
     }
   }, [isOpen, state, handleClose]);
-
-  if (!isOpen) return null;
 
   // Formatar countdown
   const formatCountdown = (seconds: number) => {
@@ -86,36 +103,44 @@ export function QRCodeModal({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-        
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {state === 'generating' && 'Gerando QR Code'}
-            {state === 'waiting' && 'Conectar WhatsApp'}
-            {state === 'connecting' && 'Conectando...'}
-            {state === 'connected' && 'Conectado!'}
-            {state === 'timeout' && 'QR Code Expirado'}
-            {state === 'error' && 'Erro na Conexão'}
-          </h2>
-          
-          {/* Botão fechar (apenas se não estiver conectando/conectado) */}
-          {state !== 'connecting' && state !== 'connected' && (
-            <button
-              onClick={handleClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-              aria-label="Fechar modal"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          )}
-        </div>
+  // Título do modal baseado no estado
+  const getTitle = () => {
+    switch (state) {
+      case 'generating':
+        return 'Gerando QR Code';
+      case 'waiting':
+        return 'Conectar WhatsApp';
+      case 'connecting':
+        return 'Conectando...';
+      case 'connected':
+        return 'Conectado!';
+      case 'timeout':
+        return 'QR Code Expirado';
+      case 'error':
+        return 'Erro na Conexão';
+      default:
+        return 'WhatsApp';
+    }
+  };
 
-        {/* Body */}
-        <div className="p-6">
-          
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent
+        className="sm:max-w-md"
+        showCloseButton={state !== 'connecting' && state !== 'connected'}
+      >
+        <DialogHeader>
+          <DialogTitle className="text-xl">{getTitle()}</DialogTitle>
+          <DialogDescription className={state === 'waiting' ? '' : 'sr-only'}>
+            {state === 'waiting'
+              ? 'Escaneie o QR Code com seu WhatsApp para conectar'
+              : getTitle()
+            }
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="py-4">
+
           {/* ESTADO: Generating */}
           {state === 'generating' && (
             <div className="flex flex-col items-center justify-center py-8 space-y-4">
@@ -159,7 +184,7 @@ export function QRCodeModal({
                 <span className="text-gray-600">
                   Expira em: <strong className="text-blue-600 font-mono text-lg">{formatCountdown(countdown)}</strong>
                 </span>
-                
+
                 {countdown < 30 && (
                   <span className="text-orange-600 text-xs animate-pulse">
                     ⚠️ Tempo acabando
@@ -181,7 +206,7 @@ export function QRCodeModal({
                 <p className="text-sm text-gray-600">Autenticando com WhatsApp</p>
                 <p className="text-xs text-gray-500">Isso pode levar até 30 segundos</p>
               </div>
-              
+
               {/* Barra de progresso animada */}
               <div className="w-full max-w-xs bg-gray-200 rounded-full h-2 overflow-hidden">
                 <div className="bg-green-600 h-full rounded-full animate-pulse" style={{width: '70%'}}></div>
@@ -201,7 +226,7 @@ export function QRCodeModal({
                   <div className="w-4 h-4 bg-green-500 rounded-full absolute top-0"></div>
                 </div>
               </div>
-              
+
               <div className="text-center space-y-2">
                 <p className="text-xl font-bold text-green-600">WhatsApp Conectado!</p>
                 {profileName && (
@@ -229,17 +254,17 @@ export function QRCodeModal({
                   </p>
                 </div>
               </div>
-              
-              <button
+
+              <Button
                 onClick={() => {
                   resetConnection();
                   startConnection();
                 }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="w-full"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className="w-4 h-4 mr-2" />
                 Tentar Novamente
-              </button>
+              </Button>
             </div>
           )}
 
@@ -256,24 +281,25 @@ export function QRCodeModal({
                   )}
                 </div>
               </div>
-              
+
               <div className="flex gap-2">
-                <button
+                <Button
+                  variant="outline"
                   onClick={handleClose}
-                  className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1"
                 >
                   Fechar
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => {
                     resetConnection();
                     startConnection();
                   }}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex-1"
                 >
-                  <RefreshCw className="w-4 h-4" />
+                  <RefreshCw className="w-4 h-4 mr-2" />
                   Tentar Novamente
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -282,11 +308,14 @@ export function QRCodeModal({
 
         {/* Footer com informações de debug (apenas em desenvolvimento) */}
         {process.env.NODE_ENV === 'development' && (
-          <div className="px-6 py-3 bg-gray-50 border-t text-xs text-gray-500 font-mono">
+          <div className="px-6 py-3 bg-gray-50 border-t rounded-b-lg text-xs text-gray-500 font-mono -mx-6 -mb-6">
             Estado: {state} | Countdown: {countdown}s | Conectado: {isConnected ? 'Sim' : 'Não'}
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
-}
+};
+
+// Exportar componente memoizado para evitar re-renderizações desnecessárias
+export const QRCodeModal = React.memo(QRCodeModalComponent);

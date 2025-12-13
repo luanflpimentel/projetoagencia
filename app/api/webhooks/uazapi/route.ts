@@ -36,10 +36,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Buscar cliente
+    // Buscar cliente (incluindo status da IA)
     const { data: cliente } = await supabase
       .from('clientes')
-      .select('id, nome_cliente')
+      .select('id, nome_cliente, ia_ativa')
       .eq('nome_instancia', instanceName)
       .single();
 
@@ -59,7 +59,12 @@ export async function POST(request: NextRequest) {
         break;
 
       case 'messages.upsert':
-        await handleNewMessage(cliente.id, instanceName, data);
+        // Verificar se IA está ativa antes de processar
+        if (cliente.ia_ativa) {
+          await handleNewMessage(cliente.id, instanceName, data);
+        } else {
+          console.log(`⏭️ [WEBHOOK] IA pausada para ${instanceName}, mensagem ignorada`);
+        }
         break;
 
       default:

@@ -88,18 +88,26 @@ export async function POST(request: NextRequest) {
         // Mapear o status da UAZAPI para o formato do banco
         let novoStatus: 'conectado' | 'desconectado' | 'connecting';
 
+        // ✅ CORREÇÃO: Extrair JID corretamente
+        const jid = data.jid || data.status?.jid || data.instance?.jid;
+        const hasValidJid = jid && typeof jid === 'string' && jid !== 'null' && jid.length > 0;
+
+        // ✅ CORREÇÃO: Só considerar conectado se tiver JID válido
         const isConnected =
-          data.connected === true ||
-          data.loggedIn === true ||
-          data.instance?.status === 'connected' ||
-          data.instance?.loggedIn === true ||
-          data.status?.connected === true ||
-          data.state === 'connected';
+          hasValidJid && (
+            data.connected === true ||
+            data.loggedIn === true ||
+            data.instance?.status === 'connected' ||
+            data.instance?.loggedIn === true ||
+            data.status?.connected === true ||
+            data.state === 'connected'
+          );
 
         const isConnecting =
           data.state === 'qrReadWait' ||
           data.state === 'connecting' ||
-          data.instance?.status === 'qrReadWait';
+          data.instance?.status === 'qrReadWait' ||
+          data.instance?.status === 'connecting';
 
         if (isConnected) {
           novoStatus = 'conectado';

@@ -48,7 +48,7 @@ export function useInstanceConnection({
   const checkIfAlreadyConnected = useCallback(async (): Promise<boolean> => {
     try {
       console.log('🔍 [HOOK] Verificando se já está conectado...');
-      
+
       const response = await fetch(
         `/api/uazapi/instances/${instanceName}/status`
       );
@@ -58,8 +58,8 @@ export function useInstanceConnection({
       }
 
       const data = await response.json();
-      const instanceStatus = data.instance?.status;
-      const statusConnected = data.status?.connected;
+      const instanceStatus = data.status; // ✅ CORRIGIDO
+      const statusConnected = data.connected; // ✅ CORRIGIDO
 
       console.log('📊 [HOOK] Status atual:', {
         instanceStatus,
@@ -154,6 +154,34 @@ export function useInstanceConnection({
     }
   }, [instanceName]);
 
+  // ✅ NOVO: Criar grupo de avisos (se ainda não foi criado)
+  const createGroupIfNeeded = useCallback(async () => {
+    try {
+      console.log('📱 [HOOK] Verificando se precisa criar grupo de avisos...');
+
+      const response = await fetch(
+        `/api/uazapi/instances/${instanceName}/create-group`,
+        { method: 'POST' }
+      );
+
+      if (!response.ok) {
+        console.error('❌ [HOOK] Erro ao criar grupo:', response.status);
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.alreadyExists) {
+        console.log('⏭️ [HOOK] Grupo já existe:', data.groupId);
+      } else {
+        console.log('✅ [HOOK] Grupo criado:', data.groupName, data.groupId);
+      }
+    } catch (error) {
+      console.error('❌ [HOOK] Erro ao criar grupo:', error);
+      // Não falhar a conexão por causa disso
+    }
+  }, [instanceName]);
+
   // Iniciar processo de conexão
   const startConnection = useCallback(async () => {
     console.log('🚀 [HOOK] Iniciando processo de conexão...');
@@ -182,14 +210,14 @@ export function useInstanceConnection({
     // Iniciar polling
     pollingIntervalRef.current = setInterval(async () => {
       console.log('🔄 [HOOK] Polling status...');
-      
+
       const statusData = await checkConnectionStatus();
       if (!statusData) return;
 
-      const instanceStatus = statusData.instance?.status;
-      const statusConnected = statusData.status?.connected;
-      const loggedIn = statusData.status?.loggedIn;
-      const jid = statusData.status?.jid;
+      const instanceStatus = statusData.status; // ✅ CORRIGIDO: statusData.status diretamente
+      const statusConnected = statusData.connected; // ✅ CORRIGIDO: statusData.connected
+      const loggedIn = statusData.loggedIn; // ✅ CORRIGIDO: statusData.loggedIn
+      const jid = statusData.jid; // ✅ CORRIGIDO: statusData.jid
 
       console.log('📊 [HOOK] Status:', {
         instanceStatus,
@@ -198,11 +226,22 @@ export function useInstanceConnection({
         jid: jid ? 'presente' : 'null',
       });
 
-      // Detectar que usuário escaneou (JID apareceu)
-      if (jid && typeof jid === 'string' && jid.length > 0) {
+      // ✅ CORRIGIDO: Só mudar para 'connecting' se o status já for 'connected'
+      // mas ainda não tiver completado todas as verificações
+      if (
+        instanceStatus === 'connected' &&
+        jid &&
+        typeof jid === 'string' &&
+        jid.length > 0 &&
+        jid !== 'null' &&
+        state === 'waiting'
+      ) {
         console.log('📱 [HOOK] QR Code escaneado! Conectando...');
         setState('connecting');
-        clearInterval(countdownIntervalRef.current!);
+        if (countdownIntervalRef.current) {
+          clearInterval(countdownIntervalRef.current);
+          countdownIntervalRef.current = null;
+        }
 
         // Timeout de segurança (30s)
         connectionTimeoutRef.current = setTimeout(() => {
@@ -222,23 +261,63 @@ export function useInstanceConnection({
         statusConnected === true &&
         loggedIn === true &&
         jid &&
-        typeof jid === 'string'
+        typeof jid === 'string' &&
+        jid !== 'null' // ✅ CORRIGIDO: Ignorar string 'null'
       ) {
         console.log('🎉 [HOOK] CONEXÃO ESTABELECIDA!');
-        
+
         setIsConnected(true);
-        setProfileName(statusData.instance?.profileName || null);
-        setPhoneNumber(statusData.instance?.owner || null);
+        setProfileName(statusData.profileName || null);
+        setPhoneNumber(statusData.phone || null);
         setState('connected');
-        
+
         clearAllTimers();
+
+        // ✅ NOVO: Criar grupo de avisos automaticamente na primeira conexão
+        await createGroupIfNeeded();
+
+        // ✅ FASE 2: Integrar Chatwoot com UAZAPI
+        try {
+          console.log('🔗 [HOOK] Buscando cliente para integração Chatwoot...');
+
+          // Buscar cliente_id baseado no instanceName
+          const clientesResponse = await fetch('/api/clientes');
+          if (clientesResponse.ok) {
+            const clientes = await clientesResponse.json();
+            const cliente = clientes.find((c: any) => c.nome_instancia === instanceName);
+
+            if (cliente) {
+              console.log('🔗 [HOOK] Integrando Chatwoot para cliente:', cliente.id);
+              const integrateResponse = await fetch(`/api/clientes/${cliente.id}/chatwoot-integrate`, {
+                method: 'POST',
+              });
+
+              if (integrateResponse.ok) {
+                const integrateData = await integrateResponse.json();
+                console.log('✅ [HOOK] Chatwoot integrado:', integrateData);
+              } else {
+                console.log('⚠️ [HOOK] Chatwoot não integrado (pode não estar configurado)');
+              }
+            } else {
+              console.log('⚠️ [HOOK] Cliente não encontrado para integração Chatwoot');
+            }
+          }
+        } catch (error) {
+          console.log('⚠️ [HOOK] Erro ao integrar Chatwoot:', error);
+          // Não falhar a conexão por causa disso
+        }
 
         if (onConnected) {
           onConnected(
-            statusData.instance?.profileName,
-            statusData.instance?.owner
+            statusData.profileName,
+            statusData.phone
           );
         }
+
+        // ✅ NOVO: Aguardar 2s e recarregar página para atualizar lista
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       }
     }, POLLING_INTERVAL);
 
@@ -260,15 +339,16 @@ export function useInstanceConnection({
     generateQRCode,
     checkConnectionStatus,
     checkIfAlreadyConnected,
+    createGroupIfNeeded,
     clearAllTimers,
     onConnected,
     onError,
   ]);
 
   // Resetar conexão
-  const resetConnection = useCallback(() => {
+  const resetConnection = useCallback(async () => {
     console.log('🔄 [HOOK] Resetando conexão...');
-    
+
     clearAllTimers();
     setState('idle');
     setQrCode(null);
@@ -277,7 +357,18 @@ export function useInstanceConnection({
     setIsConnected(false);
     setProfileName(null);
     setPhoneNumber(null);
-  }, [clearAllTimers]);
+
+    // ✅ NOVO: Atualizar status no banco para 'desconectado' ao resetar manualmente
+    try {
+      await fetch(`/api/uazapi/instances/${instanceName}/reset-status`, {
+        method: 'POST',
+      });
+      console.log('✅ [HOOK] Status resetado no banco de dados');
+    } catch (error) {
+      console.error('❌ [HOOK] Erro ao resetar status no banco:', error);
+      // Não falhar o reset por causa disso
+    }
+  }, [clearAllTimers, instanceName]);
 
   // Detectar visibilidade da página para pausar polling
   useEffect(() => {
@@ -291,23 +382,32 @@ export function useInstanceConnection({
           clearInterval(pollingIntervalRef.current);
           pollingIntervalRef.current = null;
         }
-      } else if (state === 'waiting' || state === 'connecting') {
-        // Página voltou a ficar ativa - retomar polling
+      } else if ((state === 'waiting' || state === 'connecting') && !pollingIntervalRef.current) {
+        // Página voltou a ficar ativa - retomar polling APENAS se não estiver rodando
         console.log('▶️ [HOOK] Página ativa - retomando polling');
 
         pollingIntervalRef.current = setInterval(async () => {
           const statusData = await checkConnectionStatus();
           if (!statusData) return;
 
-          const instanceStatus = statusData.instance?.status;
-          const statusConnected = statusData.status?.connected;
-          const loggedIn = statusData.status?.loggedIn;
-          const jid = statusData.status?.jid;
+          const instanceStatus = statusData.status; // ✅ CORRIGIDO
+          const statusConnected = statusData.connected; // ✅ CORRIGIDO
+          const loggedIn = statusData.loggedIn; // ✅ CORRIGIDO
+          const jid = statusData.jid; // ✅ CORRIGIDO
 
-          if (jid && typeof jid === 'string' && jid.length > 0) {
+          // ✅ CORRIGIDO: Só mudar para 'connecting' se status já for 'connected'
+          if (
+            instanceStatus === 'connected' &&
+            jid &&
+            typeof jid === 'string' &&
+            jid.length > 0 &&
+            jid !== 'null' &&
+            state === 'waiting'
+          ) {
             setState('connecting');
             if (countdownIntervalRef.current) {
               clearInterval(countdownIntervalRef.current);
+              countdownIntervalRef.current = null;
             }
 
             connectionTimeoutRef.current = setTimeout(() => {
@@ -325,21 +425,30 @@ export function useInstanceConnection({
             statusConnected === true &&
             loggedIn === true &&
             jid &&
-            typeof jid === 'string'
+            typeof jid === 'string' &&
+            jid !== 'null' // ✅ CORRIGIDO
           ) {
             setIsConnected(true);
-            setProfileName(statusData.instance?.profileName || null);
-            setPhoneNumber(statusData.instance?.owner || null);
+            setProfileName(statusData.profileName || null);
+            setPhoneNumber(statusData.phone || null);
             setState('connected');
 
             clearAllTimers();
 
+            // ✅ NOVO: Criar grupo de avisos
+            await createGroupIfNeeded();
+
             if (onConnected) {
               onConnected(
-                statusData.instance?.profileName,
-                statusData.instance?.owner
+                statusData.profileName,
+                statusData.phone
               );
             }
+
+            // ✅ NOVO: Aguardar 2s e recarregar página
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
           }
         }, POLLING_INTERVAL);
       }
@@ -350,7 +459,7 @@ export function useInstanceConnection({
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [state, checkConnectionStatus, clearAllTimers, onConnected]);
+  }, [state, checkConnectionStatus, createGroupIfNeeded, clearAllTimers, onConnected]);
 
   // Cleanup ao desmontar
   useEffect(() => {

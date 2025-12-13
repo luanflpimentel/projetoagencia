@@ -15,7 +15,7 @@ import ProtegerRota from '@/components/auth/ProtegerRota';
 
 export default function ClientesPage() {
   return (
-    <ProtegerRota somenteAgencia>
+    <ProtegerRota>
       <ClientesPageContent />
     </ProtegerRota>
   );

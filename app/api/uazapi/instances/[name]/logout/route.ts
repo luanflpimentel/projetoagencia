@@ -70,8 +70,8 @@ export async function DELETE(
       // Continuar mesmo com erro na API (pode já estar desconectado)
     }
 
-    // Atualizar status no banco
-    const { error: updateError } = await supabase
+    // Atualizar status no banco usando admin client
+    const { error: updateError } = await supabaseAdmin
       .from('clientes')
       .update({
         status_conexao: 'desconectado',
