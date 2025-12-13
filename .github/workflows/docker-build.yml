@@ -38,3 +38,11 @@ jobs:
           build-args: |
             NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_CHATWOOT_BASE_URL=${{ secrets.NEXT_PUBLIC_CHATWOOT_BASE_URL }}
+            NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
+            SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+            CHATWOOT_BASE_URL=${{ secrets.CHATWOOT_BASE_URL }}
+            CHATWOOT_PLATFORM_API_TOKEN=${{ secrets.CHATWOOT_PLATFORM_API_TOKEN }}
+            UAZAPI_BASE_URL=${{ secrets.UAZAPI_BASE_URL }}
+            UAZAPI_ADMIN_TOKEN=${{ secrets.UAZAPI_ADMIN_TOKEN }}
+            WEBHOOK_SECRET=${{ secrets.WEBHOOK_SECRET }}
