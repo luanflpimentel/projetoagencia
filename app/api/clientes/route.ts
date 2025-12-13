@@ -326,7 +326,9 @@ export async function POST(request: NextRequest) {
         if (conviteError) {
           console.error('Erro ao criar convite:', conviteError);
         } else {
-          const linkConvite = `${request.nextUrl.origin}/aceitar-convite?token=${token}`;
+          // Usar NEXT_PUBLIC_APP_URL para gerar link correto em produção
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+          const linkConvite = `${baseUrl}/aceitar-convite?token=${token}`;
           convite = {
             email: body.email,
             token,
