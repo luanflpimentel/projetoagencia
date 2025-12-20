@@ -362,7 +362,7 @@ export async function POST(request: NextRequest) {
         credentials: {
           url: process.env.CHATWOOT_BASE_URL,
           email: body.email,
-          password: 'AgenciaTalisma1!', // Senha fixa
+          password: 'Zeyno@2024!', // Senha fixa
         }
       } : null,
     }, { status: 201 });

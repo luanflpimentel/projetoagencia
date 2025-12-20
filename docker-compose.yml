@@ -1,10 +1,10 @@
 version: '3.8'
 
 services:
-  botconversa:
+  zeyno:
     # Usar imagem do GitHub Container Registry (buildada pelo GitHub Actions)
     image: ghcr.io/luanflpimentel/projetoagencia:latest
-    container_name: botconversa-app
+    container_name: zeyno-app
     restart: unless-stopped
     
     # Variáveis de ambiente
@@ -44,23 +44,23 @@ services:
       - "traefik.enable=true"
       
       # Nome do serviço
-      - "traefik.http.services.botconversa.loadbalancer.server.port=3000"
-      
+      - "traefik.http.services.zeyno.loadbalancer.server.port=3000"
+
       # Roteamento HTTP
-      - "traefik.http.routers.botconversa.rule=Host(`zeyno.app.br`)"
-      - "traefik.http.routers.botconversa.entrypoints=web"
-      
+      - "traefik.http.routers.zeyno.rule=Host(`zeyno.app.br`)"
+      - "traefik.http.routers.zeyno.entrypoints=web"
+
       # Redirect HTTP -> HTTPS
-      - "traefik.http.routers.botconversa.middlewares=redirect-to-https@file"
-      
+      - "traefik.http.routers.zeyno.middlewares=redirect-to-https@file"
+
       # Roteamento HTTPS
-      - "traefik.http.routers.botconversa-secure.rule=Host(`zeyno.app.br`)"
-      - "traefik.http.routers.botconversa-secure.entrypoints=websecure"
-      - "traefik.http.routers.botconversa-secure.tls=true"
-      - "traefik.http.routers.botconversa-secure.tls.certresolver=letsencrypt"
-      
+      - "traefik.http.routers.zeyno-secure.rule=Host(`zeyno.app.br`)"
+      - "traefik.http.routers.zeyno-secure.entrypoints=websecure"
+      - "traefik.http.routers.zeyno-secure.tls=true"
+      - "traefik.http.routers.zeyno-secure.tls.certresolver=letsencrypt"
+
       # Middlewares adicionais (opcional)
-      - "traefik.http.routers.botconversa-secure.middlewares=security-headers@file"
+      - "traefik.http.routers.zeyno-secure.middlewares=security-headers@file"
     
     # Rede do Traefik
     networks:

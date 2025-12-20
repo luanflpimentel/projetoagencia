@@ -220,7 +220,7 @@ class ChatwootService {
     emailContato: string
   ): Promise<ProvisionResult> {
     try {
-      const password = 'AgenciaTalisma1!'; // Senha fixa
+      const password = 'Zeyno@2024!'; // Senha fixa
 
       // PASSO 1: Criar Account
       let account: ChatwootAccount;

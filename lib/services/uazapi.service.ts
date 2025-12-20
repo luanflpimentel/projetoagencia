@@ -165,7 +165,7 @@ export class UazapiService {
       method: 'POST',
       body: JSON.stringify({
         name: data.name,
-        systemName: data.systemName || 'botconversa',
+        systemName: data.systemName || 'zeyno',
       }),
     });
   }

@@ -490,13 +490,13 @@ export function ClienteCard({ cliente, onDelete, userRole = 'cliente' }: Cliente
                 <input
                   type="text"
                   readOnly
-                  value="AgenciaTalisma1!"
+                  value="Zeyno@2024!"
                   className="flex-1 px-3 py-2 text-sm border rounded-md bg-muted font-mono"
                 />
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleCopy('AgenciaTalisma1!', 'password')}
+                  onClick={() => handleCopy('Zeyno@2024!', 'password')}
                 >
                   {copiedField === 'password' ? (
                     <Check className="h-4 w-4 text-green-600" />

@@ -31,7 +31,7 @@ Adicione **um por vez** os seguintes secrets (copie os valores do `.env.producti
 
 #### Secret 4: UAZAPI_BASE_URL
 - **Name**: `UAZAPI_BASE_URL`
-- **Value**: `https://agenciatalisma.uazapi.com`
+- **Value**: `https://zeyno.uazapi.com`
 
 #### Secret 5: UAZAPI_ADMIN_TOKEN
 - **Name**: `UAZAPI_ADMIN_TOKEN`

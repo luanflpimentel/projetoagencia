@@ -29,7 +29,7 @@ export function MobileMenu({ userEmail }: { userEmail: string }) {
       {/* Header com logo e botão */}
       <div className="flex items-center justify-between">
         <Link href="/dashboard" className="text-xl font-bold text-blue-600">
-          Agência Talismã
+          Zeyno
         </Link>
 
         {/* Hamburger Button */}

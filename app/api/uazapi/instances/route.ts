@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     // Criar na UAZAPI
     const instanceData = await uazapiService.createInstance({
       name: nomeInstancia,
-      systemName: 'botconversa',
+      systemName: 'zeyno',
     });
 
     console.log('✅ Instância criada na UAZAPI:', instanceData);

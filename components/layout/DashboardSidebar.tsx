@@ -86,16 +86,16 @@ export function DashboardSidebar() {
           {!isCollapsed && (
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">AT</span>
+                <span className="text-primary-foreground font-bold text-sm">Z</span>
               </div>
               <h2 className="text-base font-semibold text-sidebar-foreground">
-                Agência Talismã
+                Zeyno
               </h2>
             </div>
           )}
           {isCollapsed && (
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center mx-auto">
-              <span className="text-primary-foreground font-bold text-xs">AT</span>
+              <span className="text-primary-foreground font-bold text-xs">Z</span>
             </div>
           )}
           {!isCollapsed && (
@@ -191,7 +191,7 @@ export function DashboardSidebar() {
               <span className="font-medium text-foreground">1.0.0</span>
             </div>
             <div className="text-xs text-muted-foreground">
-              © 2024 Agência Talismã
+              © 2024 Zeyno
             </div>
           </div>
         )}
