@@ -108,21 +108,21 @@ export default function ConfigurarClientePage({
       </div>
 
       {/* Info do Cliente */}
-      <div className="bg-muted rounded-lg p-4 flex items-center justify-between">
-        <div className="space-y-1">
+      <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 flex items-center justify-between border border-gray-200 dark:border-gray-700">
+        <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Instância:</span>
-            <span className="font-mono text-sm">{cliente.nome_instancia}</span>
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Instância:</span>
+            <span className="font-mono text-sm text-gray-900 dark:text-gray-100">{cliente.nome_instancia}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Escritório:</span>
-            <span className="text-sm">{cliente.nome_escritorio}</span>
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Escritório:</span>
+            <span className="text-sm text-gray-900 dark:text-gray-100">{cliente.nome_escritorio}</span>
           </div>
         </div>
-        
+
         {cliente.prompt_editado_manualmente && (
-          <div className="bg-amber-100 dark:bg-amber-900 px-3 py-1 rounded-md">
-            <span className="text-xs text-amber-800 dark:text-amber-200">
+          <div className="bg-amber-100 dark:bg-amber-900 px-3 py-1.5 rounded-md border border-amber-200 dark:border-amber-700">
+            <span className="text-xs font-medium text-amber-800 dark:text-amber-200">
               ✏️ Prompt editado manualmente
             </span>
           </div>
@@ -147,15 +147,15 @@ export default function ConfigurarClientePage({
       <PromptEditor cliente={cliente} onSave={handleSaveSuccess} />
 
       {/* Footer Info */}
-      <div className="bg-muted rounded-lg p-4 text-sm space-y-2">
+      <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 text-sm space-y-2 border border-gray-200 dark:border-gray-700">
         <div className="flex justify-between">
-          <span className="text-muted-foreground">Última atualização:</span>
-          <span>{new Date(cliente.atualizado_em).toLocaleString('pt-BR')}</span>
+          <span className="font-semibold text-gray-700 dark:text-gray-300">Última atualização:</span>
+          <span className="text-gray-900 dark:text-gray-100">{new Date(cliente.atualizado_em).toLocaleString('pt-BR')}</span>
         </div>
         {cliente.ultima_regeneracao && (
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Última regeneração:</span>
-            <span>{new Date(cliente.ultima_regeneracao).toLocaleString('pt-BR')}</span>
+            <span className="font-semibold text-gray-700 dark:text-gray-300">Última regeneração:</span>
+            <span className="text-gray-900 dark:text-gray-100">{new Date(cliente.ultima_regeneracao).toLocaleString('pt-BR')}</span>
           </div>
         )}
       </div>

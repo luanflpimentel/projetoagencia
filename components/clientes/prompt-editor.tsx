@@ -197,15 +197,15 @@ export function PromptEditor({ cliente, onSave }: PromptEditorProps) {
         {/* Seletor de Templates */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <Label className="text-base">Selecionar Templates</Label>
+            <Label className="text-base font-semibold text-gray-900 dark:text-gray-100">Selecionar Templates</Label>
             {selectedTemplates.length > 0 && (
-              <Badge variant="secondary">
+              <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-700">
                 {selectedTemplates.length} selecionado{selectedTemplates.length !== 1 ? 's' : ''}
               </Badge>
             )}
           </div>
-          
-          <div className="border rounded-lg p-4 max-h-[400px] overflow-y-auto">
+
+          <div className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 max-h-[400px] overflow-y-auto bg-white dark:bg-gray-900">
             <TemplateSelector
               clienteId={cliente.id}
               selectedIds={selectedTemplates}
@@ -254,14 +254,14 @@ export function PromptEditor({ cliente, onSave }: PromptEditorProps) {
       <div className="lg:col-span-3 space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <Label className="text-base">Prompt Final</Label>
-            <p className="text-sm text-muted-foreground mt-1">
+            <Label className="text-base font-semibold text-gray-900 dark:text-gray-100">Prompt Final</Label>
+            <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
               Você pode editar o prompt manualmente se necessário
             </p>
           </div>
-          
+
           {promptEditado && (
-            <Badge variant="outline" className="bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300">
+            <Badge variant="outline" className="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700">
               ✏️ Editado
             </Badge>
           )}
@@ -271,7 +271,7 @@ export function PromptEditor({ cliente, onSave }: PromptEditorProps) {
           value={prompt}
           onChange={(e) => handlePromptChange(e.target.value)}
           placeholder="Selecione templates e clique em 'Gerar Prompt' para criar o prompt automaticamente..."
-          className="min-h-[500px] font-mono text-sm"
+          className="min-h-[500px] font-mono text-sm bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
         />
 
         <Button

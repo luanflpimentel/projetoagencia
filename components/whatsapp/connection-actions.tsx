@@ -1,8 +1,8 @@
 // components/whatsapp/connection-actions.tsx - CORRIGIDO
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { Wifi, WifiOff, Settings, Loader2, AlertTriangle } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { Wifi, WifiOff, Loader2, AlertTriangle } from 'lucide-react';
 import { QRCodeModal } from './qrcode-modal';
 import { useToast } from '@/components/ui/toast';
 import {
@@ -152,18 +152,6 @@ export function ConnectionActions({
             Conectar WhatsApp
           </button>
         )}
-
-        {/* Botão Configurar (sempre visível) */}
-        <button
-          className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-          onClick={() => {
-            toast.info('Configurações em breve!');
-          }}
-          title="Configurar instância"
-        >
-          <Settings className="w-4 h-4" />
-          Configurar
-        </button>
       </div>
 
       {/* Modal QR Code */}
