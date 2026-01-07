@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
+import { useToast } from '@/components/ui/toast';
 import type { Template } from '@/lib/types';
 
 interface TemplateFormProps {
@@ -13,6 +14,7 @@ interface TemplateFormProps {
 
 export default function TemplateForm({ template, isEdit = false }: TemplateFormProps) {
   const router = useRouter();
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     nome_template: template?.nome_template || '',
@@ -43,15 +45,16 @@ export default function TemplateForm({ template, isEdit = false }: TemplateFormP
       });
 
       if (response.ok) {
-        alert(isEdit ? 'Template atualizado com sucesso!' : 'Template criado com sucesso!');
+        toast.success(isEdit ? 'Template atualizado com sucesso!' : 'Template criado com sucesso!');
         router.push('/dashboard/templates');
         router.refresh();
       } else {
-        alert('Erro ao salvar template');
+        const errorData = await response.json();
+        toast.error(errorData.error || 'Erro ao salvar template');
       }
     } catch (error) {
       console.error('Erro ao salvar template:', error);
-      alert('Erro ao salvar template');
+      toast.error('Erro ao salvar template. Tente novamente.');
     } finally {
       setLoading(false);
     }

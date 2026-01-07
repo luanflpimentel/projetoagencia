@@ -6,6 +6,7 @@ import TemplateCard from '@/components/templates/template-card';
 import { Plus, Search, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import Link from 'next/link';
+import { useToast } from '@/components/ui/toast';
 import ProtegerRota from '@/components/auth/ProtegerRota';
 
 interface Template {
@@ -30,6 +31,7 @@ function TemplatesPageContent() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
+  const toast = useToast();
 
   useEffect(() => {
     fetchTemplates();
@@ -57,11 +59,14 @@ function TemplatesPageContent() {
 
       if (response.ok) {
         fetchTemplates();
-        alert('Template duplicado com sucesso!');
+        toast.success('Template duplicado com sucesso!');
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || 'Erro ao duplicar template');
       }
     } catch (error) {
       console.error('Erro ao duplicar template:', error);
-      alert('Erro ao duplicar template');
+      toast.error('Erro ao duplicar template. Tente novamente.');
     }
   }
 
@@ -75,11 +80,14 @@ function TemplatesPageContent() {
 
       if (response.ok) {
         fetchTemplates();
-        alert('Template desativado com sucesso!');
+        toast.success('Template desativado com sucesso!');
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || 'Erro ao desativar template');
       }
     } catch (error) {
       console.error('Erro ao desativar template:', error);
-      alert('Erro ao desativar template');
+      toast.error('Erro ao desativar template. Tente novamente.');
     }
   }
 

@@ -125,9 +125,12 @@ export function ClienteCard({ cliente, onDelete, userRole = 'cliente' }: Cliente
 
       const data = await response.json();
       setIaAtiva(data.ia_ativa);
+      toast.success(`IA ${novoEstado ? 'ativada' : 'pausada'} com sucesso!`);
     } catch (error) {
       console.error('Erro ao toggle IA:', error);
-      alert('Erro ao alterar status da IA');
+      toast.error('Erro ao alterar status da IA. Tente novamente.');
+      // Reverter o estado visual
+      setIaAtiva(!novoEstado);
     } finally {
       setIsTogglingIA(false);
     }

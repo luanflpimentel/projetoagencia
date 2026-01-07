@@ -7,6 +7,7 @@ import { ArrowLeft, Send, Trash2, Bot, User, ChevronDown, ChevronUp } from 'luci
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/components/ui/toast';
 
 interface ChatMessage {
   id: string;
@@ -27,7 +28,8 @@ export default function TestePromptPage() {
   const router = useRouter();
   const params = useParams(); // CORRIGIDO: useParams() em vez de receber params
   const clienteId = params.id as string; // CORRIGIDO: Extrair id dos params
-  
+  const toast = useToast();
+
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [loading, setLoading] = useState(true);
   const [mensagem, setMensagem] = useState('');
@@ -64,7 +66,7 @@ export default function TestePromptPage() {
         ]);
       } catch (error) {
         console.error('Erro ao buscar cliente:', error);
-        alert('Erro ao carregar dados do cliente');
+        toast.error('Erro ao carregar dados do cliente');
       } finally {
         setLoading(false);
       }
@@ -119,7 +121,7 @@ export default function TestePromptPage() {
       setMensagens((prev) => [...prev, novaMensagemAssistant]);
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
-      alert('Erro ao processar mensagem');
+      toast.error('Erro ao processar mensagem. Tente novamente.');
     } finally {
       setEnviando(false);
     }
