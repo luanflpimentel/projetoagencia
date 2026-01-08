@@ -1,17 +1,9 @@
 // app/login/page.tsx
 import { LoginForm } from '@/components/auth/login-form';
-import { createClient } from '@/lib/supabase-server';
-import { redirect } from 'next/navigation';
 
-export default async function LoginPage() {
-  const supabase = await createClient();
-  
-  const { data: { user } } = await supabase.auth.getUser();
-
-  // Se já está autenticado, redireciona para dashboard
-  if (user) {
-    redirect('/dashboard');
-  }
+export default function LoginPage() {
+  // Redirecionamento é feito pelo middleware.ts
+  // Removido para evitar conflito de múltiplos redirects
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

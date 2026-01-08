@@ -26,11 +26,13 @@ export function useAuth() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: any, session: any) => {
         setUser(session?.user ?? null);
-        
+
+        // Redirecionamento é feito pelo middleware.ts
+        // Aqui só atualizamos o estado do usuário
         if (event === 'SIGNED_IN') {
-          router.push('/dashboard');
+          router.refresh(); // Apenas atualiza a página para o middleware redirecionar
         }
-        
+
         if (event === 'SIGNED_OUT') {
           router.push('/login');
         }
